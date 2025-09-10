@@ -22,8 +22,8 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
     <header 
       id="header-container"
       className={cn(
-        'relative overflow-hidden transition-[height] duration-500 ease-in-out -m-6 md:-m-8 mb-8 rounded-t-3xl',
-        isExpanded ? 'h-[80vh]' : 'h-[250px] md:h-[300px]'
+        'relative overflow-hidden transition-[height] duration-500 ease-in-out -m-4 md:-m-8 mb-4 md:mb-8 rounded-t-2xl sm:rounded-t-3xl',
+        isExpanded ? 'h-[70vh]' : 'h-[200px] md:h-[300px]'
       )}
     >
       <LocationMap partnerLocation={partner.location} />
@@ -38,15 +38,15 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
 
         <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
-            <h1 className="text-5xl md:text-7xl font-bold text-white drop-shadow-lg select-none">couplesna</h1>
+            <h1 className="text-4xl md:text-7xl font-bold text-white drop-shadow-lg select-none">couplesna</h1>
           </div>
-          <p className="text-white/70 mt-2">Your private space, connecting hearts across any distance.</p>
+          <p className="text-white/70 mt-2 text-sm md:text-base">Your private space, connecting hearts across any distance.</p>
         </div>
       </div>
 
       <div id="map-controls" className="absolute bottom-4 right-4 z-30">
-        <Button size="icon" variant="ghost" onClick={() => setIsExpanded(!isExpanded)} className="bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm">
-          {isExpanded ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+        <Button size="icon" variant="ghost" onClick={() => setIsExpanded(!isExpanded)} className="bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm h-8 w-8 md:h-10 md:w-10">
+          {isExpanded ? <Minimize className="h-4 w-4 md:h-5 md:w-5" /> : <Maximize className="h-4 w-4 md:h-5 md:w-5" />}
           <span className="sr-only">{isExpanded ? "Collapse map" : "Expand map"}</span>
         </Button>
       </div>

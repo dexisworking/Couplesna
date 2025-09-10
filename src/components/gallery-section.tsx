@@ -15,15 +15,21 @@ const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: 
     <div
       onClick={onClick}
       className="album-tile group aspect-square bg-cover bg-center rounded-xl cursor-pointer relative overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105"
-      style={{ backgroundImage: `url(${firstImage})` }}
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
     >
+      <Image
+        src={firstImage}
+        alt={category.title}
+        fill
+        sizes="(max-width: 768px) 50vw, 25vw"
+        className="object-cover"
+      />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-0.5 rounded-full border border-white/10">
         {category.images.length}
       </div>
-      <div className="album-title absolute bottom-0 left-0 right-0 p-4 font-semibold text-white">
+      <div className="album-title absolute bottom-0 left-0 right-0 p-2 md:p-4 text-sm md:text-base font-semibold text-white">
         {category.title}
       </div>
     </div>
@@ -101,7 +107,7 @@ export default function GallerySection() {
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
         {gallery.map(category => (
           <AlbumTile key={category.id} category={category} onClick={() => openModal(category)} />
         ))}
@@ -115,8 +121,8 @@ export default function GallerySection() {
             </Button>
             
             {activeCategory.images.length > 1 && (
-              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex - 1)} className="absolute left-4 md:left-10 text-white p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
-                <ChevronLeft className="h-6 w-6" />
+              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex - 1)} className="absolute left-4 md:left-10 text-white p-2 md:p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
+                <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
               </Button>
             )}
 
@@ -128,7 +134,7 @@ export default function GallerySection() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  className="max-h-[80vh] max-w-[80vw]"
+                  className="max-h-[80vh] max-w-[90vw] md:max-w-[80vw]"
                 >
                   {currentImage && (
                      <Image
@@ -143,22 +149,22 @@ export default function GallerySection() {
                 </motion.div>
               </AnimatePresence>
 
-              <div id="carousel-actions" className="mt-6 flex items-center gap-4">
+              <div id="carousel-actions" className="mt-4 md:mt-6 flex items-center gap-2 md:gap-4">
                 <p id="carouselCounter" className="text-white/80 text-sm font-mono">
                   {currentImageIndex + 1} / {activeCategory.images.length}
                 </p>
-                <Button onClick={() => fileInputRef.current?.click()} size="sm">
-                  <Upload className="mr-2 h-4 w-4" /> Add Photos
+                <Button onClick={() => fileInputRef.current?.click()} size="sm" className="text-xs px-3 h-8">
+                  <Upload className="mr-1 h-3 w-3" /> Add
                 </Button>
-                <Button onClick={handleDelete} variant="destructive" size="sm">
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Button onClick={handleDelete} variant="destructive" size="sm" className="text-xs px-3 h-8">
+                  <Trash2 className="mr-1 h-3 w-3" /> Delete
                 </Button>
               </div>
             </div>
             
             {activeCategory.images.length > 1 && (
-              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex + 1)} className="absolute right-4 md:right-10 text-white p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
-                <ChevronRight className="h-6 w-6" />
+              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex + 1)} className="absolute right-4 md:right-10 text-white p-2 md:p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
+                <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
               </Button>
             )}
 

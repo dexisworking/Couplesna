@@ -7,13 +7,13 @@ import SyncStatusCards from '@/components/sync-status-cards';
 
 export default function Home() {
   return (
-    <div className="min-h-screen p-4 bg-black">
-      <div className="w-full max-w-5xl mx-auto bg-background rounded-3xl p-6 md:p-8 min-h-[90vh]">
+    <div className="min-h-screen p-2 sm:p-4 bg-black">
+      <div className="w-full max-w-5xl mx-auto bg-background rounded-2xl sm:rounded-3xl p-4 md:p-8 min-h-[95vh]">
         <Header user={dashboardData.user} partner={dashboardData.partner} coupleId={dashboardData.coupleId} />
         
-        <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="widget lg:col-span-3 p-4">
-            <h2 className="text-xl font-semibold text-white/90 mb-4 px-2">Always In Sync</h2>
+            <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-4 px-2">Always In Sync</h2>
             <SyncStatusCards partner={dashboardData.partner} user={dashboardData.user} />
           </div>
 
@@ -27,8 +27,8 @@ export default function Home() {
              <NotesCard notes={dashboardData.notes} />
           </div>
 
-          <div className="widget lg:col-span-3 p-6">
-             <h2 className="text-xl font-semibold text-white/90 mb-4 text-center">Our Moments</h2>
+          <div className="widget lg:col-span-3 p-4 md:p-6">
+             <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-4 text-center">Our Moments</h2>
              <GallerySection />
           </div>
         </main>

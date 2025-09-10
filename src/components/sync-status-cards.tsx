@@ -16,7 +16,7 @@ interface SyncStatusCardsProps {
 }
 
 const InfoTile = ({ icon: Icon, title, children, className }: { icon?: React.ElementType, title: string, children: React.ReactNode, className?: string }) => (
-  <div className={`carousel-tile flex-shrink-0 w-[280px] h-[180px] bg-accent/50 backdrop-blur-lg border border-white/10 rounded-3xl p-4 flex flex-col text-white ${className}`}>
+  <div className={`carousel-tile flex-shrink-0 w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-accent/50 backdrop-blur-lg border border-white/10 rounded-3xl p-4 flex flex-col text-white ${className}`}>
     <p className="text-sm text-white/70">{title}</p>
     {children}
   </div>
@@ -42,7 +42,7 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
 
   return (
     <InfoTile title="Partner's Time">
-      <p className="text-5xl font-bold mt-auto">{partnerTime}</p>
+      <p className="text-4xl md:text-5xl font-bold mt-auto">{partnerTime}</p>
       <p className="text-sm text-white/70">
         {partner.location.timezone.split('/')[1]?.replace('_', ' ') || 'Local Time'}
       </p>
@@ -60,13 +60,13 @@ export default function SyncStatusCards({ user, partner }: SyncStatusCardsProps)
         <CarouselItem className="pl-4 basis-auto">
           <InfoTile title="Distance Apart">
             <div className="mt-auto text-center">
-              <p className="text-5xl font-bold">{dashboardData.distanceApartKm.toLocaleString()}</p>
+              <p className="text-4xl md:text-5xl font-bold">{dashboardData.distanceApartKm.toLocaleString()}</p>
               <p className="text-sm text-white/70">kilometers</p>
             </div>
           </InfoTile>
         </CarouselItem>
         <CarouselItem className="pl-4 basis-auto">
-           <div className="carousel-tile w-[280px] h-[180px] bg-gradient-to-br from-rose-500 to-purple-600 rounded-3xl p-4 flex flex-col text-white">
+           <div className="carousel-tile w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-gradient-to-br from-rose-500 to-purple-600 rounded-3xl p-4 flex flex-col text-white">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                         <Waves className="h-6 w-6"/>
@@ -84,7 +84,7 @@ export default function SyncStatusCards({ user, partner }: SyncStatusCardsProps)
         <CarouselItem className="pl-4 basis-auto">
           <InfoTile title="Partner is Listening to">
             <div className="mt-auto">
-              <p className="text-xl font-semibold truncate">{partner.media.track}</p>
+              <p className="text-lg md:text-xl font-semibold truncate">{partner.media.track}</p>
               <p className="text-xs text-white/50">on {partner.media.app}</p>
             </div>
           </InfoTile>

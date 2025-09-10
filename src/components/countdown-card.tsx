@@ -28,7 +28,7 @@ interface TimeLeft {
 
 const TimeBox = ({ value, unit }: { value: number; unit: string }) => (
   <div>
-    <span className="text-5xl font-bold tracking-tight text-white">{String(value).padStart(2, '0')}</span>
+    <span className="text-4xl md:text-5xl font-bold tracking-tight text-white">{String(value).padStart(2, '0')}</span>
     <span className="block text-xs opacity-70 text-white/70">{unit}</span>
   </div>
 );
@@ -66,12 +66,12 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   };
 
   return (
-    <div className="p-6 rounded-2xl flex flex-col items-center justify-center text-center text-white h-full">
-      <h2 className="text-xl font-semibold text-white/90 mb-1">Countdown to our next moment!</h2>
-      <p className="text-sm text-white/60 mb-4">Until we meet again...</p>
+    <div className="p-4 md:p-6 rounded-2xl flex flex-col items-center justify-center text-center text-white h-full">
+      <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-1">Countdown to our next moment!</h2>
+      <p className="text-xs md:text-sm text-white/60 mb-4">Until we meet again...</p>
       
       {timeLeft ? (
-        <div className="flex space-x-4">
+        <div className="flex space-x-3 md:space-x-4">
           <TimeBox value={timeLeft.days} unit="Days" />
           <TimeBox value={timeLeft.hours} unit="Hours" />
           <TimeBox value={timeLeft.minutes} unit="Mins" />
