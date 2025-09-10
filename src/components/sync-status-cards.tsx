@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, InfinityIcon, Music } from 'lucide-react';
 import { format } from 'date-fns';
-import { utcToZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { dashboardData } from '@/lib/data';
 import type { User, Partner } from '@/lib/types';
 
@@ -30,7 +30,7 @@ const PartnerTimeCard = ({ partner }: { partner: Partner }) => {
 
   React.useEffect(() => {
     const getTime = () => {
-      const zonedDate = utcToZonedTime(new Date(), partner.location.timezone);
+      const zonedDate = toZonedTime(new Date(), partner.location.timezone);
       setPartnerTime(format(zonedDate, 'HH:mm:ss'));
     };
     getTime();
