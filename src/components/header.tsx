@@ -38,7 +38,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
 
         <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
-            <h1 className="text-4xl md:text-7xl font-bold text-white drop-shadow-lg select-none">couplesna</h1>
+            <Image src="/logo.png" alt="couplesna logo" width={250} height={100} />
           </div>
           <p className="text-white/70 mt-2 text-sm md:text-base">Your private space, connecting hearts across any distance.</p>
         </div>
