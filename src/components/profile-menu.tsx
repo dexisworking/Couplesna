@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetDescription,
-} from '@/components/ui/sheet';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,8 +95,8 @@ export default function ProfileMenu({
   );
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
+    <Dialog>
+      <DialogTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
           <Avatar className="h-8 w-8">
             {isSynced ? (
@@ -109,14 +109,14 @@ export default function ProfileMenu({
             </AvatarFallback>
           </Avatar>
         </Button>
-      </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px] bg-background/95 backdrop-blur-lg border-l-border/50">
-        <SheetHeader>
-          <SheetTitle>Profile & Settings</SheetTitle>
-          <SheetDescription>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Profile & Settings</DialogTitle>
+          <DialogDescription>
             Manage your connection, view details, and handle your account.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         <div className="mt-4">
           <Tabs defaultValue="sync" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
@@ -273,7 +273,7 @@ export default function ProfileMenu({
             </TabsContent>
           </Tabs>
         </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }
