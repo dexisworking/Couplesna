@@ -22,7 +22,7 @@ const InfoTile = ({ icon: Icon, title, children, className }: { icon?: React.Ele
 );
 
 const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
-  const [partnerTime, setPartnerTime] = React.useState('');
+  const [partnerTime, setPartnerTime] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const getTime = () => {
@@ -34,6 +34,8 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
         setPartnerTime('--:--');
       }
     };
+    
+    // Set initial time to avoid mismatch, then update every second
     getTime();
     const interval = setInterval(getTime, 1000);
     return () => clearInterval(interval);
@@ -41,7 +43,7 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
 
   return (
     <InfoTile title="Partner's Time">
-      <p className="text-4xl md:text-5xl font-bold mt-auto">{partnerTime}</p>
+      <p className="text-4xl md:text-5xl font-bold mt-auto">{partnerTime ?? '--:--'}</p>
       <p className="text-sm text-white/70">
         {partner.location.timezone.split('/')[1]?.replace('_', ' ') || 'Local Time'}
       </p>
