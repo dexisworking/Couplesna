@@ -1,6 +1,13 @@
-import { Heart } from 'lucide-react';
+'use client';
+import * as React from 'react';
 import ProfileMenu from '@/components/profile-menu';
 import type { User, Partner } from '@/lib/types';
+import LocationMap from './location-map';
+import WeatherCard from './weather-card';
+import { Button } from './ui/button';
+import { ArrowDownLeft, ArrowUpRight, Maximize, Minimize } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface HeaderProps {
   user: User;
@@ -9,16 +16,39 @@ interface HeaderProps {
 }
 
 export default function Header({ user, partner, coupleId }: HeaderProps) {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card/80 backdrop-blur-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Heart className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold font-headline text-foreground">
-            couplesna
-          </h1>
+    <header 
+      id="header-container"
+      className={cn(
+        'relative overflow-hidden transition-[height] duration-500 ease-in-out -m-6 md:-m-8 mb-8 rounded-t-3xl',
+        isExpanded ? 'h-[80vh]' : 'h-[250px] md:h-[300px]'
+      )}
+    >
+      <LocationMap partnerLocation={partner.location} />
+      <div id="header-gradient" className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-background to-transparent z-10" />
+
+      <div id="header-content" className="relative z-20 h-full flex flex-col justify-center items-center">
+        {/* Top Bar for Weather and Profile */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-10">
+          <WeatherCard weather={partner.weather} />
+          <ProfileMenu user={user} partner={partner} coupleId={coupleId} />
         </div>
-        <ProfileMenu user={user} partner={partner} coupleId={coupleId} />
+
+        <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>
+          <div className="flex items-center justify-center">
+            <h1 className="text-5xl md:text-7xl font-bold text-white drop-shadow-lg select-none">couplesna</h1>
+          </div>
+          <p className="text-white/70 mt-2">Your private space, connecting hearts across any distance.</p>
+        </div>
+      </div>
+
+      <div id="map-controls" className="absolute bottom-4 right-4 z-30">
+        <Button size="icon" variant="ghost" onClick={() => setIsExpanded(!isExpanded)} className="bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm">
+          {isExpanded ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+          <span className="sr-only">{isExpanded ? "Collapse map" : "Expand map"}</span>
+        </Button>
       </div>
     </header>
   );

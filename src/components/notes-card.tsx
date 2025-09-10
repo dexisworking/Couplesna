@@ -1,12 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { dashboardData } from '@/lib/data';
-import { Edit3, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface NotesCardProps {
@@ -16,71 +11,69 @@ interface NotesCardProps {
   };
 }
 
-export default function NotesCard({ notes }: NotesCardProps) {
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [userNote, setUserNote] = React.useState(notes.user);
-  const { toast } = useToast();
+export default function NotesCard({ notes: initialNotes }: NotesCardProps) {
+  const [notes, setNotes] = React.useState(initialNotes);
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically save the note to your backend
-    toast({
-      title: 'Note saved!',
-      description: 'Your partner will see your updated note.',
+  const makeChatEditable = (
+    e: React.MouseEvent<HTMLDivElement>, 
+    userKey: 'user' | 'partner'
+  ) => {
+    const bubble = e.currentTarget;
+    const originalText = notes[userKey];
+    
+    // Prevent making a bubble editable if it's already being edited
+    if (bubble.querySelector('input')) return;
+
+    bubble.innerHTML = `<input type="text" class="chat-bubble-input" value="${originalText}">`;
+    const input = bubble.querySelector('input') as HTMLInputElement;
+    input.focus();
+    input.select();
+
+    const save = () => {
+      const newText = input.value.trim();
+      bubble.textContent = newText || originalText;
+      if (newText && newText !== originalText) {
+        setNotes(prev => ({...prev, [userKey]: newText}));
+        // Here you would typically save to a backend
+      }
+       bubble.addEventListener('click', (ev) => makeChatEditable(ev as any, userKey), { once: true });
+    };
+    
+    input.addEventListener('blur', save);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') input.blur();
+      if (e.key === 'Escape') {
+        input.value = originalText;
+        input.blur();
+      }
     });
   };
 
   return (
-    <Card className="shadow-lg h-full">
-      <CardContent className="p-6 flex flex-col justify-between h-full space-y-4">
-        <div className="flex-grow space-y-4">
-          {/* Partner's Note */}
-          <div className="flex items-start gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={dashboardData.partner.profilePic} alt={dashboardData.partner.name} />
-              <AvatarFallback>{dashboardData.partner.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="w-full">
-              <p className="text-sm font-semibold mb-1">{dashboardData.partner.name}</p>
-              <div className="bg-muted rounded-lg p-3 text-sm min-h-[80px]">
-                {notes.partner}
-              </div>
-            </div>
-          </div>
-
-          {/* User's Note */}
-          <div className="flex items-start gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={dashboardData.user.profilePic} alt={dashboardData.user.name} />
-              <AvatarFallback>{dashboardData.user.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="w-full">
-              <p className="text-sm font-semibold mb-1">{dashboardData.user.name} (You)</p>
-              <Textarea
-                value={userNote}
-                onChange={(e) => setUserNote(e.target.value)}
-                readOnly={!isEditing}
-                className="bg-primary/5 text-sm ring-offset-background focus-visible:ring-primary min-h-[80px]"
-                placeholder="Leave a note for your partner..."
-              />
-            </div>
-          </div>
+    <>
+      <h2 className="text-xl font-semibold text-white/90 mb-2 text-center">Heartbeat Chat</h2>
+      <p className="text-center text-xs text-white/60 mb-4">Click a message to edit it.</p>
+      <div id="chat-container" className="flex-grow space-y-3 flex flex-col justify-end p-4">
+        <div 
+          className="chat-bubble chat-bubble-user2"
+          onClick={(e) => makeChatEditable(e, 'partner')}
+        >
+          {notes.partner}
         </div>
-
-        <div className="flex justify-end">
-          {isEditing ? (
-            <Button size="sm" onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Note
-            </Button>
-          ) : (
-            <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
-              <Edit3 className="mr-2 h-4 w-4" />
-              Edit Note
-            </Button>
-          )}
+        <div 
+          className="chat-bubble chat-bubble-user1"
+          onClick={(e) => makeChatEditable(e, 'user')}
+        >
+          {notes.user}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+       <style jsx>{`
+        .chat-bubble { padding: 10px 15px; border-radius: 20px; max-width: 80%; cursor: pointer; transition: background-color 0.2s; }
+        .chat-bubble-user1 { background-color: #f43f5e; color: white; margin-left: auto; border-bottom-right-radius: 5px;}
+        .chat-bubble-user2 { background-color: #374151; color: white; margin-right: auto; border-bottom-left-radius: 5px;}
+        .chat-bubble:hover { filter: brightness(1.1); }
+        .chat-bubble-input { all: unset; width: 100%; background: transparent; color: white; }
+      `}</style>
+    </>
   );
 }

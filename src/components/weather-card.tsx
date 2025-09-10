@@ -1,6 +1,6 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Sun, Cloudy, Wind, Umbrella, Snowflake } from 'lucide-react';
 import type { Partner } from '@/lib/types';
+import Image from 'next/image';
 
 interface WeatherCardProps {
   weather: Partner['weather'];
@@ -18,14 +18,9 @@ export default function WeatherCard({ weather }: WeatherCardProps) {
   const Icon = weatherIcons[weather.icon] || Sun;
 
   return (
-    <Card className="absolute top-4 left-4 bg-card/80 backdrop-blur-sm shadow-xl">
-      <CardContent className="p-4 flex items-center gap-4">
-        <Icon className="h-10 w-10 text-primary" />
-        <div>
-          <p className="text-3xl font-bold">{weather.tempCelsius}°C</p>
-          <p className="text-muted-foreground">{weather.condition}</p>
-        </div>
-      </CardContent>
-    </Card>
+    <div id="weather-widget" className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full pl-2 pr-3 py-2 border border-white/10 text-white text-sm">
+      <Icon className="w-8 h-8 text-yellow-300" />
+      <span id="weather-temp">{weather.tempCelsius}°C</span>
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 import {
@@ -18,8 +17,6 @@ import DateIdeaGenerator from './date-idea-generator';
 
 interface CountdownCardProps {
   nextMeetDate: string;
-  userLocation: string;
-  partnerLocation: string;
 }
 
 interface TimeLeft {
@@ -30,13 +27,13 @@ interface TimeLeft {
 }
 
 const TimeBox = ({ value, unit }: { value: number; unit: string }) => (
-  <div className="flex flex-col items-center justify-center bg-primary/10 rounded-lg p-4 w-24 h-24 md:p-6 md:w-32 md:h-32 transition-all duration-300">
-    <span className="text-4xl md:text-6xl font-bold text-primary tracking-tighter">{String(value).padStart(2, '0')}</span>
-    <span className="text-sm md:text-base text-primary/80 uppercase tracking-widest">{unit}</span>
+  <div>
+    <span className="text-5xl font-bold tracking-tight text-white">{String(value).padStart(2, '0')}</span>
+    <span className="block text-xs opacity-70 text-white/70">{unit}</span>
   </div>
 );
 
-export default function CountdownCard({ nextMeetDate, userLocation, partnerLocation }: CountdownCardProps) {
+export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   const [targetDate, setTargetDate] = React.useState(new Date(nextMeetDate));
   const [newDate, setNewDate] = React.useState<Date | undefined>(targetDate);
 
@@ -69,53 +66,49 @@ export default function CountdownCard({ nextMeetDate, userLocation, partnerLocat
   };
 
   return (
-    <Card className="shadow-lg">
-      <CardContent className="p-6 md:p-8 flex flex-col items-center justify-center space-y-8">
-        {timeLeft ? (
-          <div className="flex items-center justify-center gap-2 md:gap-4 lg:gap-8">
-            <TimeBox value={timeLeft.days} unit="Days" />
-            <TimeBox value={timeLeft.hours} unit="Hours" />
-            <TimeBox value={timeLeft.minutes} unit="Minutes" />
-            <TimeBox value={timeLeft.seconds} unit="Seconds" />
-          </div>
-        ) : (
-          <div className="text-center py-10">
+    <div className="p-6 rounded-2xl flex flex-col items-center justify-center text-center text-white h-full">
+      <h2 className="text-xl font-semibold text-white/90 mb-1">Countdown to our next moment!</h2>
+      <p className="text-sm text-white/60 mb-4">Until we meet again...</p>
+      
+      {timeLeft ? (
+        <div className="flex space-x-4">
+          <TimeBox value={timeLeft.days} unit="Days" />
+          <TimeBox value={timeLeft.hours} unit="Hours" />
+          <TimeBox value={timeLeft.minutes} unit="Mins" />
+          <TimeBox value={timeLeft.seconds} unit="Secs" />
+        </div>
+      ) : (
+         <div className="text-center py-4">
             <p className="text-2xl font-bold text-primary">The wait is over!</p>
           </div>
-        )}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="lg">
-                <CalendarIcon className="mr-2 h-5 w-5" />
-                Set New Date
+      )}
+      
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="link" className="mt-4 text-xs text-primary hover:text-primary/90">Set Date</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set your next meeting date</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <Calendar
+              mode="single"
+              selected={newDate}
+              onSelect={setNewDate}
+              className="rounded-md border"
+              disabled={(date) => date < new Date()}
+            />
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" onClick={handleSetDate}>
+                Save Date
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Set your next meeting date</DialogTitle>
-              </DialogHeader>
-              <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={newDate}
-                  onSelect={setNewDate}
-                  className="rounded-md border"
-                  disabled={(date) => date < new Date()}
-                />
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button type="button" onClick={handleSetDate}>
-                    Save Date
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <DateIdeaGenerator userLocation={userLocation} partnerLocation={partnerLocation} />
-        </div>
-      </CardContent>
-    </Card>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

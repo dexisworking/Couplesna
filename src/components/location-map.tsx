@@ -12,7 +12,7 @@ export default function LocationMap({ partnerLocation }: LocationMapProps) {
   const mapImageUrl = PlaceHolderImages.find(img => img.id === 'map-background')?.imageUrl || '';
 
   return (
-    <Card className="w-full aspect-[3/1] relative overflow-hidden bg-muted">
+    <div className="absolute inset-0 z-0">
       <Image
         src={mapImageUrl}
         alt="World map"
@@ -21,14 +21,16 @@ export default function LocationMap({ partnerLocation }: LocationMapProps) {
         data-ai-hint="abstract map"
         priority
       />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="flex flex-col items-center animate-pulse">
-          <span className="px-3 py-1 text-sm font-semibold text-primary-foreground bg-primary rounded-md shadow-lg mb-2">
+      <div className="absolute inset-0 flex items-center justify-center z-10">
+        {/* The map functionality will be handled by a script, 
+            this is a placeholder for partner location pin */}
+        <div className="flex flex-col items-center text-white/90 animate-pulse">
+          <span className="px-3 py-1 text-sm font-semibold bg-primary rounded-full shadow-lg mb-2">
             {partnerLocation.city}, {partnerLocation.country}
           </span>
           <MapPin className="h-10 w-10 text-primary drop-shadow-lg" fill="currentColor" />
         </div>
       </div>
-    </Card>
+    </div>
   );
 }

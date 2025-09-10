@@ -1,14 +1,178 @@
+'use client';
+import * as React from 'react';
+import Image from 'next/image';
 import { dashboardData } from '@/lib/data';
-import GalleryCard from './gallery-card';
+import type { GalleryCategory, GalleryImage } from '@/lib/types';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from './ui/button';
+import { ChevronLeft, ChevronRight, Upload, Trash2, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
-export default function GallerySection() {
-  const { gallery } = dashboardData;
+const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: () => void }) => {
+  const firstImage = category.images[0]?.url || 'https://placehold.co/400x400/1e1e1e/333333?text=+';
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-      {gallery.map((category) => (
-        <GalleryCard key={category.id} category={category} />
-      ))}
+    <div
+      onClick={onClick}
+      className="album-tile group aspect-square bg-cover bg-center rounded-xl cursor-pointer relative overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105"
+      style={{ backgroundImage: `url(${firstImage})` }}
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+    >
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-0.5 rounded-full border border-white/10">
+        {category.images.length}
+      </div>
+      <div className="album-title absolute bottom-0 left-0 right-0 p-4 font-semibold text-white">
+        {category.title}
+      </div>
     </div>
+  );
+};
+
+export default function GallerySection() {
+  const [gallery, setGallery] = React.useState(dashboardData.gallery);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [activeCategory, setActiveCategory] = React.useState<GalleryCategory | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const openModal = (category: GalleryCategory) => {
+    setActiveCategory(category);
+    setCurrentImageIndex(0);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setActiveCategory(null);
+  };
+
+  const showImage = (index: number) => {
+    if (!activeCategory) return;
+    const newIndex = (index + activeCategory.images.length) % activeCategory.images.length;
+    setCurrentImageIndex(newIndex);
+  };
+
+  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || !activeCategory) return;
+
+    const newImages: GalleryImage[] = Array.from(files).map(file => ({
+      url: URL.createObjectURL(file),
+      hint: 'new upload',
+    }));
+
+    setGallery(prevGallery =>
+      prevGallery.map(cat => {
+        if (cat.id === activeCategory.id) {
+          const updatedCategory = { ...cat, images: [...cat.images, ...newImages] };
+          setActiveCategory(updatedCategory);
+          return updatedCategory;
+        }
+        return cat;
+      })
+    );
+  };
+
+  const handleDelete = () => {
+     if (!activeCategory) return;
+      const updatedImages = [...activeCategory.images];
+      updatedImages.splice(currentImageIndex, 1);
+
+      setGallery(prevGallery =>
+        prevGallery.map(cat => {
+          if (cat.id === activeCategory.id) {
+            const updatedCategory = { ...cat, images: updatedImages };
+            setActiveCategory(updatedCategory);
+            // Show the previous image or the first one if the deleted one was the first
+            setCurrentImageIndex(Math.max(0, currentImageIndex - 1));
+            if (updatedImages.length === 0) {
+              closeModal();
+            }
+            return updatedCategory;
+          }
+          return cat;
+        })
+      );
+  };
+
+  const currentImage = activeCategory?.images[currentImageIndex];
+
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {gallery.map(category => (
+          <AlbumTile key={category.id} category={category} onClick={() => openModal(category)} />
+        ))}
+      </div>
+      
+      {isModalOpen && activeCategory && (
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="bg-black/90 border-0 max-w-none w-screen h-screen p-0 flex items-center justify-center backdrop-blur-lg">
+            <Button variant="ghost" size="icon" onClick={closeModal} className="absolute top-4 right-4 text-white hover:bg-white/10 z-50">
+              <X className="h-6 w-6" />
+            </Button>
+            
+            {activeCategory.images.length > 1 && (
+              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex - 1)} className="absolute left-4 md:left-10 text-white p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+            )}
+
+            <div className="relative flex flex-col items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentImage?.url}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="max-h-[80vh] max-w-[80vw]"
+                >
+                  {currentImage && (
+                     <Image
+                      src={currentImage.url}
+                      alt={activeCategory.title}
+                      width={1200}
+                      height={800}
+                      className="object-contain rounded-lg shadow-2xl"
+                      data-ai-hint={currentImage.hint}
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              <div id="carousel-actions" className="mt-6 flex items-center gap-4">
+                <p id="carouselCounter" className="text-white/80 text-sm font-mono">
+                  {currentImageIndex + 1} / {activeCategory.images.length}
+                </p>
+                <Button onClick={() => fileInputRef.current?.click()} size="sm">
+                  <Upload className="mr-2 h-4 w-4" /> Add Photos
+                </Button>
+                <Button onClick={handleDelete} variant="destructive" size="sm">
+                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                </Button>
+              </div>
+            </div>
+            
+            {activeCategory.images.length > 1 && (
+              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex + 1)} className="absolute right-4 md:right-10 text-white p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+            )}
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              multiple
+              accept="image/*"
+              onChange={handleUpload}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
