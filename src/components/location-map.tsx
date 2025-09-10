@@ -1,36 +1,133 @@
-import Image from 'next/image';
-import { MapPin } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
+'use client';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import type { Partner } from '@/lib/types';
+import { useMemo } from 'react';
+import { Skeleton } from './ui/skeleton';
 
 interface LocationMapProps {
   partnerLocation: Partner['location'];
 }
 
+const mapStyles = [
+  { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+  {
+    featureType: 'administrative.locality',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#d59563' }],
+  },
+  {
+    featureType: 'poi',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#d59563' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#263c3f' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#6b9a76' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry',
+    stylers: [{ color: '#38414e' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#212a37' }],
+  },
+  {
+    featureType: 'road',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#9ca5b3' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry',
+    stylers: [{ color: '#746855' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#1f2835' }],
+  },
+  {
+    featureType: 'road.highway',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#f3d19c' }],
+  },
+  {
+    featureType: 'transit',
+    elementType: 'geometry',
+    stylers: [{ color: '#2f3948' }],
+  },
+  {
+    featureType: 'transit.station',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#d59563' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'geometry',
+    stylers: [{ color: '#17263c' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.fill',
+    stylers: [{ color: '#515c6d' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels.text.stroke',
+    stylers: [{ color: '#17263c' }],
+  },
+];
+
 export default function LocationMap({ partnerLocation }: LocationMapProps) {
-  const mapImageUrl = PlaceHolderImages.find(img => img.id === 'map-background')?.imageUrl || '';
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+  });
+
+  const center = useMemo(() => ({
+    lat: partnerLocation.coords.lat,
+    lng: partnerLocation.coords.lon,
+  }), [partnerLocation]);
+
+  if (loadError) {
+    return <div className="absolute inset-0 bg-destructive/50 flex items-center justify-center text-white">Error loading map</div>;
+  }
+
+  if (!isLoaded) {
+    return <Skeleton className="absolute inset-0" />;
+  }
+  
+  if(!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    return <div className="absolute inset-0 bg-muted/50 flex items-center justify-center text-center text-white p-4">
+      Please add your Google Maps API Key to the .env file to display the map.
+    </div>;
+  }
 
   return (
     <div className="absolute inset-0 z-0">
-      <Image
-        src={mapImageUrl}
-        alt="World map"
-        fill
-        className="object-cover opacity-30"
-        data-ai-hint="abstract map"
-        priority
-      />
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        {/* The map functionality will be handled by a script, 
-            this is a placeholder for partner location pin */}
-        <div className="flex flex-col items-center text-white/90 animate-pulse">
-          <span className="px-3 py-1 text-sm font-semibold bg-primary rounded-full shadow-lg mb-2">
-            {partnerLocation.city}, {partnerLocation.country}
-          </span>
-          <MapPin className="h-10 w-10 text-primary drop-shadow-lg" fill="currentColor" />
-        </div>
-      </div>
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        center={center}
+        zoom={12}
+        options={{
+          styles: mapStyles,
+          disableDefaultUI: true,
+          zoomControl: false,
+        }}
+      >
+        <Marker position={center} />
+      </GoogleMap>
     </div>
   );
 }
