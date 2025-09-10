@@ -1,0 +1,69 @@
+'use server';
+/**
+ * @fileOverview An AI agent that suggests date ideas based on distance and mutual interests.
+ *
+ * - suggestDateIdeas - A function that suggests date ideas.
+ * - SuggestDateIdeasInput - The input type for the suggestDateIdeas function.
+ * - SuggestDateIdeasOutput - The return type for the suggestDateIdeas function.
+ */
+
+import {ai} from '@/ai/genkit';
+import {z} from 'genkit';
+
+const SuggestDateIdeasInputSchema = z.object({
+  userLocation: z
+    .string()
+    .describe("The user's current location (e.g., 'city, country')."),
+  partnerLocation: z
+    .string()
+    .describe("The partner's current location (e.g., 'city, country')."),
+  mutualInterests: z
+    .string()
+    .describe('A comma-separated list of mutual interests (e.g., hiking, movies, cooking).'),
+  maxDistanceMiles: z
+    .number()
+    .int()
+    .positive()
+    .optional()
+    .describe('The maximum distance in miles the user is willing to travel.'),
+});
+export type SuggestDateIdeasInput = z.infer<typeof SuggestDateIdeasInputSchema>;
+
+const SuggestDateIdeasOutputSchema = z.object({
+  dateIdeas: z
+    .array(z.string())
+    .describe('A list of suggested date ideas.'),
+});
+export type SuggestDateIdeasOutput = z.infer<typeof SuggestDateIdeasOutputSchema>;
+
+export async function suggestDateIdeas(input: SuggestDateIdeasInput): Promise<SuggestDateIdeasOutput> {
+  return suggestDateIdeasFlow(input);
+}
+
+const prompt = ai.definePrompt({
+  name: 'suggestDateIdeasPrompt',
+  input: {schema: SuggestDateIdeasInputSchema},
+  output: {schema: SuggestDateIdeasOutputSchema},
+  prompt: `You are a date idea generator.  Given the user's location, their partner's location, and their mutual interests, suggest some date ideas. Consider the distance between them, and suggest both in-person and virtual date ideas.
+
+User Location: {{{userLocation}}}
+Partner Location: {{{partnerLocation}}}
+Mutual Interests: {{{mutualInterests}}}
+
+{% if maxDistanceMiles %}Maximum travel distance: {{{maxDistanceMiles}}} miles.{% endif %}
+
+Here are some date ideas:
+`,
+});
+
+const suggestDateIdeasFlow = ai.defineFlow(
+  {
+    name: 'suggestDateIdeasFlow',
+    inputSchema: SuggestDateIdeasInputSchema,
+    outputSchema: SuggestDateIdeasOutputSchema,
+  },
+  async input => {
+    const {output} = await prompt(input);
+    return output!;
+  }
+);

@@ -1,3 +1,46 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "map-background",
+      "description": "A stylized, abstract map background showing continents.",
+      "imageUrl": "https://picsum.photos/seed/mapbg/1200/400",
+      "imageHint": "abstract map"
+    },
+    {
+      "id": "profile-user",
+      "description": "Profile picture for the primary user, Alex.",
+      "imageUrl": "https://picsum.photos/seed/alex/100/100",
+      "imageHint": "man smiling"
+    },
+    {
+      "id": "profile-partner",
+      "description": "Profile picture for the partner, Casey.",
+      "imageUrl": "https://picsum.photos/seed/casey/100/100",
+      "imageHint": "woman smiling"
+    },
+    {
+      "id": "gallery-us-together",
+      "description": "Cover image for the 'Us Together' gallery.",
+      "imageUrl": "https://picsum.photos/seed/ustogether/400/400",
+      "imageHint": "couple hugging"
+    },
+    {
+      "id": "gallery-cute-moments",
+      "description": "Cover image for the 'Cute Moments' gallery.",
+      "imageUrl": "https://picsum.photos/seed/cutemoments/400/400",
+      "imageHint": "couple laughing"
+    },
+    {
+      "id": "gallery-our-trips",
+      "description": "Cover image for the 'Our Trips' gallery.",
+      "imageUrl": "https://picsum.photos/seed/ourtrips/400/400",
+      "imageHint": "couple travel"
+    },
+    {
+      "id": "gallery-favorite-portraits",
+      "description": "Cover image for the 'Favorite Portraits' gallery.",
+      "imageUrl": "https://picsum.photos/seed/portraits/400/400",
+      "imageHint": "portrait person"
+    }
+  ]
 }
