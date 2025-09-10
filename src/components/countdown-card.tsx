@@ -67,7 +67,7 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   };
 
   return (
-    <div className="text-center text-white">
+    <div className="text-center text-white flex flex-col items-center">
       <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-1">Countdown to our next moment!</h2>
       <p className="text-xs md:text-sm text-white/60 mb-4">Until we meet again...</p>
       
