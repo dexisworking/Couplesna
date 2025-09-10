@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,6 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
-import DateIdeaGenerator from './date-idea-generator';
 
 interface CountdownCardProps {
   nextMeetDate: string;
@@ -69,7 +67,7 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   };
 
   return (
-    <div className="p-4 md:p-6 rounded-2xl flex flex-col items-center justify-center text-center text-white h-full">
+    <div className="text-center text-white">
       <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-1">Countdown to our next moment!</h2>
       <p className="text-xs md:text-sm text-white/60 mb-4">Until we meet again...</p>
       

@@ -4,6 +4,7 @@ import NotesCard from '@/components/notes-card';
 import GallerySection from '@/components/gallery-section';
 import { dashboardData } from '@/lib/data';
 import SyncStatusCards from '@/components/sync-status-cards';
+import DateIdeaGenerator from '@/components/date-idea-generator';
 
 export default function Home() {
   return (
@@ -17,9 +18,13 @@ export default function Home() {
             <SyncStatusCards partner={dashboardData.partner} user={dashboardData.user} />
           </div>
 
-          <div className="widget lg:col-span-2">
+          <div className="widget lg:col-span-2 flex flex-col items-center justify-center p-6 gap-6">
              <CountdownCard 
                 nextMeetDate={dashboardData.nextMeetDate} 
+              />
+              <DateIdeaGenerator 
+                userLocation={`${dashboardData.user.location.city}, ${dashboardData.user.location.country}`}
+                partnerLocation={`${dashboardData.partner.location.city}, ${dashboardData.partner.location.country}`}
               />
           </div>
           
