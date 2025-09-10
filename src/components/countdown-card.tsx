@@ -36,6 +36,7 @@ const TimeBox = ({ value, unit }: { value: number; unit: string }) => (
 export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   const [targetDate, setTargetDate] = React.useState(new Date(nextMeetDate));
   const [newDate, setNewDate] = React.useState<Date | undefined>(targetDate);
+  const [timeLeft, setTimeLeft] = React.useState<TimeLeft | null>(null);
 
   const calculateTimeLeft = React.useCallback((): TimeLeft | null => {
     const difference = targetDate.getTime() - new Date().getTime();
@@ -50,12 +51,14 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
     return null;
   }, [targetDate]);
 
-  const [timeLeft, setTimeLeft] = React.useState<TimeLeft | null>(calculateTimeLeft());
-
   React.useEffect(() => {
+    // Set initial time on mount to avoid hydration mismatch
+    setTimeLeft(calculateTimeLeft());
+
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
+
     return () => clearInterval(timer);
   }, [calculateTimeLeft]);
 
