@@ -15,7 +15,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
         <div className="flex items-center gap-2">
           <Heart className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold font-headline text-foreground">
-            TogetherApp
+            couplesna
           </h1>
         </div>
         <ProfileMenu user={user} partner={partner} coupleId={coupleId} />

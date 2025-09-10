@@ -47,7 +47,7 @@ export const dashboardData: DashboardData = {
       favoriteSong: 'Here Comes The Sun - The Beatles',
     },
   },
-  coupleId: 'TGCPL12345',
+  coupleId: 'CSPL12345',
   nextMeetDate: new Date(new Date().getTime() + 25 * 24 * 60 * 60 * 1000).toISOString(),
   notes: {
     user: "Can't wait to see you! I was thinking we could go to that new Italian place.",

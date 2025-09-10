@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'TogetherApp',
+  title: 'couplesna',
   description: 'Connecting long distance couples and making them feel closer.',
 };
 
