@@ -15,7 +15,7 @@ interface SyncStatusCardsProps {
 }
 
 const InfoTile = ({ icon: Icon, title, children, className }: { icon?: React.ElementType, title: string, children: React.ReactNode, className?: string }) => (
-  <div className={`carousel-tile flex-shrink-0 w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-accent/50 backdrop-blur-lg border border-white/10 rounded-3xl p-4 flex flex-col text-white ${className}`}>
+  <div className={`flex-shrink-0 w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-accent/50 backdrop-blur-lg border border-white/10 rounded-3xl p-4 flex flex-col text-white ${className}`}>
     <p className="text-sm text-white/70">{title}</p>
     {children}
   </div>
@@ -35,7 +35,6 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
       }
     };
     
-    // Set initial time to avoid mismatch, then update every second
     getTime();
     const interval = setInterval(getTime, 1000);
     return () => clearInterval(interval);
@@ -67,7 +66,7 @@ export default function SyncStatusCards({ user, partner }: SyncStatusCardsProps)
           </InfoTile>
         </CarouselItem>
         <CarouselItem className="pl-4 basis-auto">
-           <div className="carousel-tile w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-gradient-to-br from-rose-500 to-purple-600 rounded-3xl p-4 flex flex-col text-white">
+           <div className="w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-gradient-to-br from-rose-500 to-purple-600 rounded-3xl p-4 flex flex-col text-white">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                         <Waves className="h-6 w-6"/>

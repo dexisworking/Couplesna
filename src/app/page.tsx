@@ -13,9 +13,11 @@ export default function Home() {
         <Header user={dashboardData.user} partner={dashboardData.partner} coupleId={dashboardData.coupleId} />
         
         <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="widget lg:col-span-3 p-4">
+          <div className="widget lg:col-span-3 p-4 overflow-x-auto">
             <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-4 px-2">Always In Sync</h2>
-            <SyncStatusCards partner={dashboardData.partner} user={dashboardData.user} />
+            <div className="flex flex-row gap-4">
+              <SyncStatusCards partner={dashboardData.partner} user={dashboardData.user} />
+            </div>
           </div>
 
           <div className="widget lg:col-span-2 flex flex-col items-center justify-center p-6 gap-6">
