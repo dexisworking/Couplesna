@@ -12,8 +12,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const { data, loading, isSynced } = useAppContext();
+  const [isClient, setIsClient] = React.useState(false);
 
-  if (loading || !data) {
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient || loading || !data) {
     return <LoadingSkeleton />;
   }
   
