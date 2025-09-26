@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
@@ -13,16 +13,22 @@ const firebaseConfig = {
     "messagingSenderId": "745439024438"
 };
 
-function getClientSideFirebaseApp() {
+let app: FirebaseApp | null = null;
+
+function getClientSideFirebaseApp(): FirebaseApp | null {
     if (typeof window !== 'undefined') {
-        return !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        if (!app) {
+             if (!getApps().length) {
+                app = initializeApp(firebaseConfig);
+             } else {
+                app = getApp();
+             }
+        }
+        return app;
     }
     return null;
 }
 
-const app = getClientSideFirebaseApp();
-const db = app ? getFirestore(app) : null;
-const auth = app ? getAuth(app) : null;
+export { getClientSideFirebaseApp };
 
-
-export { app, db, auth, getClientSideFirebaseApp };
+    
