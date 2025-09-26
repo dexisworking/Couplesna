@@ -4,10 +4,10 @@ import * as React from 'react';
 import { doc, getFirestore, onSnapshot, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import type { DashboardData } from '@/lib/types';
 import { dashboardData as initialData } from '@/lib/data';
-import { app, auth } from '@/lib/firebase';
+import { getClientSideFirebaseApp } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 interface AppContextType {
   data: DashboardData | null;
@@ -33,7 +33,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const [user, setUser] = React.useState<FirebaseAuthUser | null>(null);
   
-  // These represent the two users in the couple relationship
   const [userId, setUserId] = React.useState<string | null>(null);
   const [partnerId, setPartnerId] = React.useState<string | null>(null);
   const [isClient, setIsClient] = React.useState(false);
@@ -42,101 +41,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsClient(true);
   }, []);
 
-  React.useEffect(() => {
-    if (!isClient) return;
-    
-    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
-      setLoading(true);
-      if (authUser) {
-        setUser(authUser);
-        setUserId(authUser.uid);
-      } else {
-        setUser(null);
-        setUserId(null);
-        setPartnerId(null);
-        setCoupleIdState(null);
-        setIsSynced(false);
-        setDataState(initialData); // Show default data when logged out
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [isClient]);
-
-  const setCoupleId = (id: string | null) => {
-    if (id) {
-       localStorage.setItem('coupleId', id);
-       setCoupleIdState(id);
-    } else {
-      localStorage.removeItem('coupleId');
-      setCoupleIdState(null);
-    }
-  }
-
-  React.useEffect(() => {
-    if (!isClient) return;
-    const savedCoupleId = localStorage.getItem('coupleId');
-    if (savedCoupleId) {
-      setCoupleIdState(savedCoupleId);
-    }
-  }, [isClient]);
-
-
-  React.useEffect(() => {
-    if (!isClient) return;
-
-    if (!coupleId) {
-      if (user) {
-        findCoupleIdForUser(user.uid);
-      } else {
-        setDataState(initialData);
-        setIsSynced(false);
-        setLoading(false);
-      }
-      return;
-    }
-
-    setIsSynced(true);
-    setLoading(true);
-    const db = getFirestore(app);
-    const docRef = doc(db, 'couples', coupleId);
-
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const docData = docSnap.data() as DashboardData;
-        setDataState(docData);
-      } else {
-        console.log("Couple document not found. Waiting for connection.");
-        setIsSynced(false);
-        setDataState(initialData);
-      }
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore snapshot error: ", error);
-      toast({
-        variant: 'destructive',
-        title: 'Connection Error',
-        description: "Could not connect to the database. Displaying local data."
-      });
-      setDataState(initialData);
-      setIsSynced(false);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coupleId, user, isClient]);
-
-
   const findCoupleIdForUser = async (uid: string) => {
+    const app = getClientSideFirebaseApp();
+    if (!app) return;
     const db = getFirestore(app);
     const couplesRef = collection(db, 'couples');
-    
-    // We create the coupleId by sorting the UIDs and joining them.
-    // This means we can't just query for a field. We must check both possibilities.
-    // This logic is flawed. A better approach is to store user UIDs in an array field.
-    // For now, let's assume we find it or we don't.
-    const userIds = [uid]; // In a real app, you might have the partner's ID here too
     const q = query(couplesRef, where('users', 'array-contains', uid));
     
     try {
@@ -156,9 +65,100 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  React.useEffect(() => {
+    if (!isClient) return;
+    const app = getClientSideFirebaseApp();
+    if (!app) return;
+    const auth = getAuth(app);
+    
+    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
+      setLoading(true);
+      if (authUser) {
+        setUser(authUser);
+        setUserId(authUser.uid);
+        const savedCoupleId = localStorage.getItem('coupleId');
+        if (savedCoupleId) {
+          setCoupleIdState(savedCoupleId);
+        } else {
+          findCoupleIdForUser(authUser.uid);
+        }
+      } else {
+        setUser(null);
+        setUserId(null);
+        setPartnerId(null);
+        setCoupleId(null);
+        setIsSynced(false);
+        setDataState(initialData);
+        setLoading(false);
+      }
+    });
+    return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient]);
+
+  const setCoupleId = (id: string | null) => {
+    if (id) {
+       localStorage.setItem('coupleId', id);
+       setCoupleIdState(id);
+    } else {
+      localStorage.removeItem('coupleId');
+      setCoupleIdState(null);
+    }
+  }
+
+  React.useEffect(() => {
+    if (!isClient) return;
+    const savedCoupleId = localStorage.getItem('coupleId');
+    if (savedCoupleId && !coupleId) {
+      setCoupleIdState(savedCoupleId);
+    }
+  }, [isClient, coupleId]);
+
+
+  React.useEffect(() => {
+    if (!isClient || !user || !coupleId) {
+      if (!user) setLoading(false);
+      return;
+    };
+
+    const app = getClientSideFirebaseApp();
+    if (!app) return;
+    const db = getFirestore(app);
+
+    setIsSynced(true);
+    setLoading(true);
+    const docRef = doc(db, 'couples', coupleId);
+
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const docData = docSnap.data() as DashboardData;
+        setDataState(docData);
+      } else {
+        console.log("Couple document not found. This might happen if a user logs out and the ID is cleared.");
+        setIsSynced(false);
+        setDataState(initialData);
+        setCoupleId(null); // Clear invalid coupleId
+      }
+      setLoading(false);
+    }, (error) => {
+      console.error("Firestore snapshot error: ", error);
+      toast({
+        variant: 'destructive',
+        title: 'Connection Error',
+        description: "Could not connect to the database. Displaying local data."
+      });
+      setDataState(initialData);
+      setIsSynced(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coupleId, user, isClient]);
 
   const handleSetData = async (newData: Partial<DashboardData>) => {
-    if (!coupleId || !data) {
+    const app = getClientSideFirebaseApp();
+    if (!app || !coupleId || !data) {
        toast({
         variant: 'destructive',
         title: 'Not Synced',
@@ -171,7 +171,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const docRef = doc(db, 'couples', coupleId);
 
     try {
-      // Create a deep copy to avoid issues with nested objects
       const currentData = JSON.parse(JSON.stringify(data));
       const updatedData = { ...currentData, ...newData };
       await setDoc(docRef, updatedData, { merge: true });
@@ -187,7 +186,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
   
   const value = { 
-    data: data || initialData, // Fallback to initial data if state is null
+    data: data || initialData,
     setData: handleSetData, 
     isSynced, 
     setIsSynced, 

@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  getAuth,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import {
@@ -38,7 +39,7 @@ import type { User, Partner, DashboardData } from '@/lib/types';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppContext } from '@/context/app-context';
-import { auth, db } from '@/lib/firebase';
+import { getClientSideFirebaseApp } from '@/lib/firebase';
 import { dashboardData as initialData } from '@/lib/data';
 
 const DetailItem = ({
@@ -78,7 +79,7 @@ export default function ProfileMenu({
   const [loginPassword, setLoginPassword] = React.useState('');
   const [regEmail, setRegEmail] = React.useState('');
   const [regPassword, setRegPassword] = React.useState('');
-  const [regName, setRegName] milking = React.useState('');
+  const [regName, setRegName] = React.useState('');
 
   const handleCopy = (text: string, label: string) => {
     if (!text) return;
@@ -90,10 +91,12 @@ export default function ProfileMenu({
   };
 
   const handleConnect = async () => {
-    if (!partnerIdInput.trim() || !user) {
+    const app = getClientSideFirebaseApp();
+    if (!app || !partnerIdInput.trim() || !user) {
       toast({ variant: 'destructive', title: 'Invalid ID', description: 'Please enter a valid User ID to connect.' });
       return;
     }
+    const db = getFirestore(app);
 
     const partnerUid = partnerIdInput.trim();
     if(partnerUid === user.uid) {
@@ -134,6 +137,9 @@ export default function ProfileMenu({
   };
   
   const handleLogout = () => {
+    const app = getClientSideFirebaseApp();
+    if (!app) return;
+    const auth = getAuth(app);
     signOut(auth);
     setCoupleId(null);
     toast({
@@ -144,6 +150,11 @@ export default function ProfileMenu({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    const app = getClientSideFirebaseApp();
+    if (!app) return;
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
     if (!regEmail || !regPassword || !regName) {
       toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out all fields.'});
       return;
@@ -170,6 +181,10 @@ export default function ProfileMenu({
 
   const handleLogin = async (e: React.FormEvent) => {
      e.preventDefault();
+     const app = getClientSideFirebaseApp();
+     if (!app) return;
+     const auth = getAuth(app);
+
     if (!loginEmail || !loginPassword) {
       toast({ variant: 'destructive', title: 'Missing fields', description: 'Please provide email and password.'});
       return;
@@ -210,10 +225,9 @@ export default function ProfileMenu({
   
   const currentUserId = user?.uid;
   
-  // Determine which user data to show as "user" and "partner" based on logged-in user
   const loggedInUserIsUser = data?.user?.username === currentUserId;
-  const displayUser = loggedInUserIsUser ? data.user : data.partner;
-  const displayPartner = loggedInUserIsUser ? data.partner : data.user;
+  const displayUser = loggedInUserIsUser ? data?.user : data?.partner;
+  const displayPartner = loggedInUserIsUser ? data?.partner : data?.user;
 
 
   return (
@@ -221,9 +235,9 @@ export default function ProfileMenu({
       <DialogTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={isSynced ? displayUser.profilePic : undefined} alt={isSynced ? displayUser.name : 'User'} />
+            <AvatarImage src={(isSynced && displayUser) ? displayUser.profilePic : undefined} alt={(isSynced && displayUser) ? displayUser.name : 'User'} />
             <AvatarFallback>
-              {isSynced && displayUser.name ? displayUser.name.charAt(0) : <UserIcon />}
+              {(isSynced && displayUser?.name) ? displayUser.name.charAt(0) : <UserIcon />}
             </AvatarFallback>
           </Avatar>
         </Button>
