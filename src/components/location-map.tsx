@@ -101,21 +101,21 @@ export default function LocationMap({ partnerLocation }: LocationMapProps) {
   }), [partnerLocation]);
 
   if (loadError) {
-    return <div className="absolute inset-0 bg-destructive/50 flex items-center justify-center text-white">Error loading map</div>;
+    return <div className="w-full h-full bg-destructive/50 flex items-center justify-center text-white">Error loading map</div>;
   }
 
   if (!isLoaded) {
-    return <Skeleton className="absolute inset-0" />;
+    return <Skeleton className="w-full h-full" />;
   }
   
   if(!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-    return <div className="absolute inset-0 bg-muted/50 flex items-center justify-center text-center text-white p-4">
+    return <div className="w-full h-full bg-muted/50 flex items-center justify-center text-center text-white p-4">
       Please add your Google Maps API Key to the .env file to display the map.
     </div>;
   }
 
   return (
-    <div className="absolute inset-0 z-0">
+    <div className="w-full h-full">
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={center}

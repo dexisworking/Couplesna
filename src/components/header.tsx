@@ -37,22 +37,27 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
         isExpanded ? 'h-[70vh]' : 'h-[200px] md:h-[300px]'
       )}
     >
-      {isClient && <LocationMap partnerLocation={partner.location} />}
+      <div className="absolute inset-0 z-0">
+        {isClient && <LocationMap partnerLocation={partner.location} />}
+      </div>
       <div id="header-gradient" className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-background to-transparent z-10" />
 
-      <div id="header-content" className="relative z-20 h-full flex flex-col justify-center items-center">
+      <div id="header-content" className="relative z-20 h-full flex flex-col justify-between items-center">
         {/* Top Bar for Weather and Profile */}
-        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-10">
+        <div className="w-full p-4 flex justify-between items-start z-10">
           <WeatherCard weather={partner.weather} />
           <ProfileMenu user={user} partner={partner} coupleId={coupleId} />
         </div>
 
-        <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>
+        <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300 pb-8", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
             <Image src="/logo.png" alt="couplesna logo" width={250} height={100} />
           </div>
           <p className="text-white/70 mt-2 text-sm md:text-base">Your private space, connecting hearts across any distance.</p>
         </div>
+        
+        {/* This div is for spacing with flex-col justify-between */}
+        <div></div>
       </div>
 
       <div id="map-controls" className="absolute bottom-4 right-4 z-30">
