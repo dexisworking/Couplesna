@@ -11,7 +11,7 @@ import { useAppContext } from '@/context/app-context';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { data, loading, isSynced } = useAppContext();
+  const { data, loading, isSynced, user: authUser } = useAppContext();
   const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
@@ -22,8 +22,9 @@ export default function Home() {
     return <LoadingSkeleton />;
   }
   
-  const user = data.user;
-  const partner = data.partner;
+  const loggedInUserIsUser = data.user.username === authUser?.uid;
+  const user = loggedInUserIsUser ? data.user : data.partner;
+  const partner = loggedInUserIsUser ? data.partner : data.user;
 
   return (
     <div className="min-h-screen p-2 sm:p-4 bg-black">

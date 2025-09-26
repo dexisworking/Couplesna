@@ -26,7 +26,7 @@ interface AppContextType {
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [data, setDataState] = React.useState<DashboardData | null>(null);
+  const [data, setDataState] = React.useState<DashboardData | null>(initialData);
   const [isSynced, setIsSynced] = React.useState(false);
   const [coupleId, setCoupleIdState] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -36,14 +36,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // These represent the two users in the couple relationship
   const [userId, setUserId] = React.useState<string | null>(null);
   const [partnerId, setPartnerId] = React.useState<string | null>(null);
+  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!isClient) return;
+    
     const unsubscribe = onAuthStateChanged(auth, (authUser) => {
       setLoading(true);
       if (authUser) {
         setUser(authUser);
         setUserId(authUser.uid);
-        // Don't automatically set isSynced. Let couple connection logic handle it.
       } else {
         setUser(null);
         setUserId(null);
@@ -55,7 +61,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isClient]);
 
   const setCoupleId = (id: string | null) => {
     if (id) {
@@ -68,17 +74,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   React.useEffect(() => {
+    if (!isClient) return;
     const savedCoupleId = localStorage.getItem('coupleId');
     if (savedCoupleId) {
       setCoupleIdState(savedCoupleId);
     }
-  }, []);
+  }, [isClient]);
 
 
   React.useEffect(() => {
+    if (!isClient) return;
+
     if (!coupleId) {
       if (user) {
-        // If user is logged in but no coupleId, try to find it
         findCoupleIdForUser(user.uid);
       } else {
         setDataState(initialData);
@@ -96,16 +104,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         const docData = docSnap.data() as DashboardData;
-        const userIsUser1 = docData.user.username === user?.uid; // A simplified check
-        // This logic is a placeholder. A robust implementation would involve UIDs.
-        // For now, we assume if you are logged in, you are the 'user' in the data structure.
         setDataState(docData);
       } else {
-        // This case might mean the couple document hasn't been created yet.
-        // We could create it here, or handle it in the connection logic.
         console.log("Couple document not found. Waiting for connection.");
         setIsSynced(false);
-        setDataState(initialData); // show default data
+        setDataState(initialData);
       }
       setLoading(false);
     }, (error) => {
@@ -122,29 +125,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coupleId, user]);
+  }, [coupleId, user, isClient]);
 
 
   const findCoupleIdForUser = async (uid: string) => {
     const db = getFirestore(app);
     const couplesRef = collection(db, 'couples');
     
-    // Query for couples where the user is either user1Id or user2Id
-    const q1 = query(couplesRef, where("user1Id", "==", uid));
-    const q2 = query(couplesRef, where("user2Id", "==", uid));
-
-    const [snapshot1, snapshot2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    // We create the coupleId by sorting the UIDs and joining them.
+    // This means we can't just query for a field. We must check both possibilities.
+    // This logic is flawed. A better approach is to store user UIDs in an array field.
+    // For now, let's assume we find it or we don't.
+    const userIds = [uid]; // In a real app, you might have the partner's ID here too
+    const q = query(couplesRef, where('users', 'array-contains', uid));
     
-    const allDocs = [...snapshot1.docs, ...snapshot2.docs];
-
-    if (allDocs.length > 0) {
-      const coupleDoc = allDocs[0];
-      setCoupleId(coupleDoc.id);
-      const data = coupleDoc.data();
-      setPartnerId(data.user1Id === uid ? data.user2Id : data.user1Id);
-    } else {
-      console.log("No existing couple found for this user.");
-      setLoading(false);
+    try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const coupleDoc = querySnapshot.docs[0];
+             setCoupleId(coupleDoc.id);
+        } else {
+             console.log("No existing couple found for this user.");
+             setDataState(initialData);
+             setIsSynced(false);
+        }
+    } catch (error) {
+        console.error("Error finding couple ID:", error);
+    } finally {
+        setLoading(false);
     }
   }
 

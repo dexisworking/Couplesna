@@ -57,6 +57,7 @@ export type DashboardData = {
   user: User;
   partner: Partner;
   coupleId: string;
+  users?: string[];
   nextMeetDate: string;
   notes: {
     user: string;

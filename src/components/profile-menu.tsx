@@ -6,7 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  User as FirebaseAuthUser,
+  updateProfile,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import {
@@ -67,7 +67,7 @@ export default function ProfileMenu({
   partner: Partner,
   coupleId: string
 }) {
-  const { user, isSynced, coupleId, setCoupleId, loading } = useAppContext();
+  const { user, isSynced, setCoupleId, data } = useAppContext();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('sync');
@@ -78,7 +78,7 @@ export default function ProfileMenu({
   const [loginPassword, setLoginPassword] = React.useState('');
   const [regEmail, setRegEmail] = React.useState('');
   const [regPassword, setRegPassword] = React.useState('');
-  const [regName, setRegName] = React.useState('');
+  const [regName, setRegName] milking = React.useState('');
 
   const handleCopy = (text: string, label: string) => {
     if (!text) return;
@@ -107,13 +107,20 @@ export default function ProfileMenu({
     try {
         const coupleDoc = await getDoc(coupleDocRef);
         if(!coupleDoc.exists()) {
-            // Create a new couple document
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const partnerDoc = await getDoc(doc(db, 'users', partnerUid));
+
+            if (!partnerDoc.exists()) {
+                toast({ variant: 'destructive', title: 'Partner not found', description: 'The entered partner ID does not correspond to a registered user.' });
+                return;
+            }
+            
             const newCoupleData: DashboardData = {
                 ...initialData,
                 coupleId: newCoupleId,
-                // Assign user and partner based on who is initiating
+                users: [user.uid, partnerUid],
                 user: { ...initialData.user, username: user.uid, name: user.displayName || "User" },
-                partner: { ...initialData.partner, username: partnerUid, name: "Partner" },
+                partner: { ...initialData.partner, username: partnerUid, name: partnerDoc.data()?.name || "Partner" },
             };
             await setDoc(coupleDocRef, newCoupleData);
         }
@@ -143,7 +150,14 @@ export default function ProfileMenu({
     }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
-      // You can add more user profile update logic here (e.g., displayName)
+      await updateProfile(userCredential.user, { displayName: regName });
+      
+      const userDocRef = doc(db, 'users', userCredential.user.uid);
+      await setDoc(userDocRef, {
+          name: regName,
+          email: regEmail,
+      });
+
       toast({ title: 'Account Created!', description: 'You can now log in.' });
       setRegEmail('');
       setRegPassword('');
@@ -168,7 +182,6 @@ export default function ProfileMenu({
       toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
     }
   }
-
 
   const renderProfileDetails = (person: User | Partner) => (
     <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
@@ -196,15 +209,21 @@ export default function ProfileMenu({
   );
   
   const currentUserId = user?.uid;
+  
+  // Determine which user data to show as "user" and "partner" based on logged-in user
+  const loggedInUserIsUser = data?.user?.username === currentUserId;
+  const displayUser = loggedInUserIsUser ? data.user : data.partner;
+  const displayPartner = loggedInUserIsUser ? data.partner : data.user;
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={isSynced ? userData.profilePic : undefined} alt={isSynced ? userData.name : 'User'} />
+            <AvatarImage src={isSynced ? displayUser.profilePic : undefined} alt={isSynced ? displayUser.name : 'User'} />
             <AvatarFallback>
-              {isSynced && userData.name ? userData.name.charAt(0) : <UserIcon />}
+              {isSynced && displayUser.name ? displayUser.name.charAt(0) : <UserIcon />}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -276,35 +295,35 @@ export default function ProfileMenu({
 
             {/* DETAILS TAB */}
             <TabsContent value="details" className="mt-6">
-              {isSynced ? (
+              {isSynced && displayUser && displayPartner ? (
                  <div className="space-y-6">
                     <div className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-muted">
                         <div className="flex items-center justify-center gap-4">
                             <Avatar className="h-16 w-16 border-4 border-background shadow-md">
-                                <AvatarImage src={userData.profilePic} alt={userData.name} />
-                                <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={displayUser.profilePic} alt={displayUser.name} />
+                                <AvatarFallback>{displayUser.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <Heart className="h-8 w-8 text-primary animate-pulse" />
                             <Avatar className="h-16 w-16 border-4 border-background shadow-md">
-                                <AvatarImage src={partnerData.profilePic} alt={partnerData.name} />
-                                <AvatarFallback>{partnerData.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={displayPartner.profilePic} alt={displayPartner.name} />
+                                <AvatarFallback>{displayPartner.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                         </div>
-                        <h3 className="mt-4 text-xl font-semibold">{userData.name} & {partnerData.name}</h3>
+                        <h3 className="mt-4 text-xl font-semibold">{displayUser.name} & {displayPartner.name}</h3>
                         <div className="text-center text-sm text-muted-foreground">
-                            <p>Anniversary: {userData.details.anniversary ? new Date(userData.details.anniversary).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</p>
+                            <p>Anniversary: {displayUser.details.anniversary ? new Date(displayUser.details.anniversary).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</p>
                         </div>
                     </div>
                     <Tabs defaultValue="user-details" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="user-details">{userData.name} (You)</TabsTrigger>
-                            <TabsTrigger value="partner-details">{partnerData.name}</TabsTrigger>
+                            <TabsTrigger value="user-details">{displayUser.name} (You)</TabsTrigger>
+                            <TabsTrigger value="partner-details">{displayPartner.name}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="user-details" className="mt-4">
-                            {renderProfileDetails(userData)}
+                            {renderProfileDetails(displayUser)}
                         </TabsContent>
                         <TabsContent value="partner-details" className="mt-4">
-                            {renderProfileDetails(partnerData)}
+                            {renderProfileDetails(displayPartner)}
                         </TabsContent>
                     </Tabs>
                  </div>

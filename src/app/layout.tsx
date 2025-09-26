@@ -13,6 +13,7 @@ const fredoka = Fredoka({
 export const metadata: Metadata = {
   title: 'couplesna',
   description: 'Connecting long distance couples and making them feel closer.',
+  icons: null,
 };
 
 export default function RootLayout({
