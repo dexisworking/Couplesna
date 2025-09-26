@@ -11,22 +11,25 @@ import { useAppContext } from '@/context/app-context';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { data, loading } = useAppContext();
+  const { data, loading, isSynced } = useAppContext();
 
   if (loading || !data) {
     return <LoadingSkeleton />;
   }
+  
+  const user = data.user;
+  const partner = data.partner;
 
   return (
     <div className="min-h-screen p-2 sm:p-4 bg-black">
       <div className="w-full max-w-5xl mx-auto bg-background rounded-2xl sm:rounded-3xl p-4 md:p-8 min-h-[95vh]">
-        <Header user={data.user} partner={data.partner} coupleId={data.coupleId} />
+        <Header user={user} partner={partner} coupleId={data.coupleId} />
         
         <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="widget lg:col-span-3 p-4 overflow-x-auto">
             <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-4 px-2">Always In Sync</h2>
             <div className="flex flex-row gap-4">
-              <SyncStatusCards partner={data.partner} user={data.user} distanceApartKm={data.distanceApartKm} />
+              <SyncStatusCards partner={partner} user={user} distanceApartKm={data.distanceApartKm} />
             </div>
           </div>
 
@@ -35,8 +38,8 @@ export default function Home() {
                 nextMeetDate={data.nextMeetDate} 
               />
               <DateIdeaGenerator 
-                userLocation={`${data.user.location.city}, ${data.user.location.country}`}
-                partnerLocation={`${data.partner.location.city}, ${data.partner.location.country}`}
+                userLocation={isSynced ? `${user.location.city}, ${user.location.country}`: 'Your Location'}
+                partnerLocation={isSynced ? `${partner.location.city}, ${partner.location.country}` : 'Partner Location'}
               />
           </div>
           
@@ -57,8 +60,9 @@ export default function Home() {
 const LoadingSkeleton = () => (
   <div className="min-h-screen p-2 sm:p-4 bg-black">
     <div className="w-full max-w-5xl mx-auto bg-background rounded-2xl sm:rounded-3xl p-4 md:p-8 min-h-[95vh] space-y-8">
-      <Skeleton className="h-[300px] w-full rounded-t-3xl -m-4 md:-m-8 mb-4 md:mb-8" />
-      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      {/* Keep the header part of the skeleton simple */}
+      <Skeleton className="h-[200px] md:h-[300px] w-full rounded-t-2xl sm:rounded-t-3xl -m-4 md:-m-8" />
+      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pt-8">
         <Skeleton className="lg:col-span-3 h-[220px] w-full" />
         <Skeleton className="lg:col-span-2 h-[400px] w-full" />
         <Skeleton className="h-[400px] w-full" />

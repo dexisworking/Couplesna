@@ -3,12 +3,20 @@
 
 import * as React from 'react';
 import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  User as FirebaseAuthUser,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogClose,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -26,11 +34,12 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import type { User, Partner } from '@/lib/types';
+import type { User, Partner, DashboardData } from '@/lib/types';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { useAppContext } from '@/context/app-context';
-
+import { auth, db } from '@/lib/firebase';
+import { dashboardData as initialData } from '@/lib/data';
 
 const DetailItem = ({
   icon: Icon,
@@ -39,32 +48,40 @@ const DetailItem = ({
 }: {
   icon: React.ElementType;
   label: string;
-  value: string;
+  value: string | undefined;
 }) => (
   <div className="flex items-start gap-4">
     <Icon className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
     <div className="flex-grow">
       <p className="font-semibold text-sm">{label}</p>
-      <p className="text-muted-foreground text-sm">{value}</p>
+      <p className="text-muted-foreground text-sm">{value || 'Not set'}</p>
     </div>
   </div>
 );
 
 export default function ProfileMenu({
-  user,
-  partner,
-  coupleId,
+  user: userData,
+  partner: partnerData,
 }: {
   user: User,
   partner: Partner,
   coupleId: string
 }) {
-  const { isSynced, setIsSynced, setCoupleId, coupleId: currentCoupleId } = useAppContext();
+  const { user, isSynced, coupleId, setCoupleId, loading } = useAppContext();
   const { toast } = useToast();
-  const [partnerIdInput, setPartnerIdInput] = React.useState('');
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('sync');
 
+  // Form states
+  const [partnerIdInput, setPartnerIdInput] = React.useState('');
+  const [loginEmail, setLoginEmail] = React.useState('');
+  const [loginPassword, setLoginPassword] = React.useState('');
+  const [regEmail, setRegEmail] = React.useState('');
+  const [regPassword, setRegPassword] = React.useState('');
+  const [regName, setRegName] = React.useState('');
 
   const handleCopy = (text: string, label: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     toast({
       title: 'Copied to clipboard!',
@@ -72,41 +89,97 @@ export default function ProfileMenu({
     });
   };
 
-  const handleConnect = () => {
-    if(partnerIdInput.trim()){
-      setCoupleId(partnerIdInput.trim());
-      toast({
-        title: "Connecting...",
-        description: `Now syncing with Couple ID: ${partnerIdInput.trim()}`
-      })
-    } else {
-      toast({
-        variant: 'destructive',
-        title: "Invalid ID",
-        description: "Please enter a valid Couple ID."
-      })
+  const handleConnect = async () => {
+    if (!partnerIdInput.trim() || !user) {
+      toast({ variant: 'destructive', title: 'Invalid ID', description: 'Please enter a valid User ID to connect.' });
+      return;
+    }
+
+    const partnerUid = partnerIdInput.trim();
+    if(partnerUid === user.uid) {
+      toast({ variant: 'destructive', title: 'Cannot connect to self', description: 'You cannot use your own User ID.' });
+      return;
+    }
+
+    const newCoupleId = [user.uid, partnerUid].sort().join('_');
+    const coupleDocRef = doc(db, 'couples', newCoupleId);
+
+    try {
+        const coupleDoc = await getDoc(coupleDocRef);
+        if(!coupleDoc.exists()) {
+            // Create a new couple document
+            const newCoupleData: DashboardData = {
+                ...initialData,
+                coupleId: newCoupleId,
+                // Assign user and partner based on who is initiating
+                user: { ...initialData.user, username: user.uid, name: user.displayName || "User" },
+                partner: { ...initialData.partner, username: partnerUid, name: "Partner" },
+            };
+            await setDoc(coupleDocRef, newCoupleData);
+        }
+        setCoupleId(newCoupleId);
+        toast({ title: 'Connection successful!', description: `You are now synced with your partner.` });
+        setIsOpen(false);
+    } catch(error) {
+        console.error("Error connecting couple:", error);
+        toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not connect with partner. Please check the ID and try again.' });
+    }
+  };
+  
+  const handleLogout = () => {
+    signOut(auth);
+    setCoupleId(null);
+    toast({
+        title: "You've been logged out.",
+    });
+    setIsOpen(false);
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regEmail || !regPassword || !regName) {
+      toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out all fields.'});
+      return;
+    }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
+      // You can add more user profile update logic here (e.g., displayName)
+      toast({ title: 'Account Created!', description: 'You can now log in.' });
+      setRegEmail('');
+      setRegPassword('');
+      setRegName('');
+      setActiveTab('account'); // Switch to login tab
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Registration Failed', description: error.message });
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+     e.preventDefault();
+    if (!loginEmail || !loginPassword) {
+      toast({ variant: 'destructive', title: 'Missing fields', description: 'Please provide email and password.'});
+      return;
+    }
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      toast({ title: 'Logged In Successfully!' });
+      setIsOpen(false); // Close dialog on successful login
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
     }
   }
 
-  const handleLogout = () => {
-    setIsSynced(false);
-    setCoupleId(null);
-     toast({
-        title: "You've been logged out.",
-        description: `You are no longer synced.`
-      })
-  }
 
   const renderProfileDetails = (person: User | Partner) => (
     <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
       <DetailItem
         icon={Calendar}
         label="Birthday"
-        value={new Date(person.details.birthday).toLocaleDateString(undefined, {
+        value={person.details.birthday ? new Date(person.details.birthday).toLocaleDateString(undefined, {
           year: 'numeric',
           month: 'long',
           day: 'numeric',
-        })}
+        }) : undefined}
       />
       <DetailItem
         icon={Paintbrush}
@@ -121,19 +194,17 @@ export default function ProfileMenu({
       <DetailItem icon={AtSign} label="Username" value={person.username} />
     </div>
   );
+  
+  const currentUserId = user?.uid;
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
           <Avatar className="h-8 w-8">
-            {isSynced ? (
-              <AvatarImage src={user.profilePic} alt={user.name} />
-            ) : (
-              <AvatarImage src={undefined} alt={'User'} />
-            )}
+            <AvatarImage src={isSynced ? userData.profilePic : undefined} alt={isSynced ? userData.name : 'User'} />
             <AvatarFallback>
-              {isSynced ? user.name.charAt(0) : <UserIcon />}
+              {isSynced && userData.name ? userData.name.charAt(0) : <UserIcon />}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -141,12 +212,12 @@ export default function ProfileMenu({
       <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Profile & Settings</DialogTitle>
-          <DialogDescription>
-            Manage your connection, view details, and handle your account.
+           <DialogDescription>
+            {user ? `Welcome, ${user.displayName || user.email}` : 'Manage your connection, view details, and handle your account.'}
           </DialogDescription>
         </DialogHeader>
         <div className="mt-4">
-          <Tabs defaultValue="sync" className="w-full">
+          <Tabs defaultValue="sync" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="sync">
                 <Heart className="mr-2 h-4 w-4" /> Sync
@@ -165,53 +236,39 @@ export default function ProfileMenu({
                 <div className="p-4 rounded-lg bg-muted space-y-4">
                   <h3 className="font-semibold">Connect with your Partner</h3>
                   <div className="space-y-2">
-                    <Label htmlFor="coupleId">Your Couple ID</Label>
+                    <Label htmlFor="coupleId">Your User ID</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         id="coupleId"
                         readOnly
-                        value={currentCoupleId || 'Not Synced'}
+                        value={currentUserId || 'Please log in'}
                         className="font-mono text-sm bg-background/50"
                       />
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => handleCopy(currentCoupleId || '', 'Couple ID')}
-                        disabled={!isSynced || !currentCoupleId}
+                        onClick={() => handleCopy(currentUserId || '', 'Your User ID')}
+                        disabled={!user}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="partnerId">Partner's Couple ID</Label>
+                    <Label htmlFor="partnerId">Partner's User ID</Label>
                     <div className="flex items-center gap-2">
                       <Input
                         id="partnerId"
                         placeholder="Paste your partner's ID here"
                         value={partnerIdInput}
                         onChange={(e) => setPartnerIdInput(e.target.value)}
+                         disabled={!user || isSynced}
                       />
-                      <Button onClick={handleConnect}>Connect</Button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-lg bg-muted space-y-4">
-                  <h3 className="font-semibold">Invite by Email</h3>
-                   <div className="space-y-2">
-                    <Label htmlFor="partnerEmail">Partner's Email</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="partnerEmail"
-                        type="email"
-                        placeholder="partner@example.com"
-                      />
-                      <Button>
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        Send Invite
+                      <Button onClick={handleConnect} disabled={!user || isSynced}>
+                        {isSynced ? 'Connected' : 'Connect'}
                       </Button>
                     </div>
+                     {isSynced && <p className="text-xs text-muted-foreground">You are already connected. Unsync from the Account tab to connect to someone else.</p>}
                   </div>
                 </div>
               </div>
@@ -224,36 +281,36 @@ export default function ProfileMenu({
                     <div className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-muted">
                         <div className="flex items-center justify-center gap-4">
                             <Avatar className="h-16 w-16 border-4 border-background shadow-md">
-                                <AvatarImage src={user.profilePic} alt={user.name} />
-                                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={userData.profilePic} alt={userData.name} />
+                                <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <Heart className="h-8 w-8 text-primary animate-pulse" />
                             <Avatar className="h-16 w-16 border-4 border-background shadow-md">
-                                <AvatarImage src={partner.profilePic} alt={partner.name} />
-                                <AvatarFallback>{partner.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={partnerData.profilePic} alt={partnerData.name} />
+                                <AvatarFallback>{partnerData.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                         </div>
-                        <h3 className="mt-4 text-xl font-semibold">{user.name} & {partner.name}</h3>
+                        <h3 className="mt-4 text-xl font-semibold">{userData.name} & {partnerData.name}</h3>
                         <div className="text-center text-sm text-muted-foreground">
-                            <p>Anniversary: {new Date(user.details.anniversary).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            <p>Anniversary: {userData.details.anniversary ? new Date(userData.details.anniversary).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</p>
                         </div>
                     </div>
                     <Tabs defaultValue="user-details" className="w-full">
                         <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="user-details">{user.name} (You)</TabsTrigger>
-                            <TabsTrigger value="partner-details">{partner.name}</TabsTrigger>
+                            <TabsTrigger value="user-details">{userData.name} (You)</TabsTrigger>
+                            <TabsTrigger value="partner-details">{partnerData.name}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="user-details" className="mt-4">
-                            {renderProfileDetails(user)}
+                            {renderProfileDetails(userData)}
                         </TabsContent>
                         <TabsContent value="partner-details" className="mt-4">
-                            {renderProfileDetails(partner)}
+                            {renderProfileDetails(partnerData)}
                         </TabsContent>
                     </Tabs>
                  </div>
               ) : (
                 <div className="text-center py-10">
-                  <p>Sync with your partner to see details.</p>
+                  <p>Log in and connect with your partner to see details.</p>
                 </div>
               )}
             </TabsContent>
@@ -261,9 +318,9 @@ export default function ProfileMenu({
             {/* ACCOUNT TAB */}
             <TabsContent value="account" className="mt-6">
               <div className="p-4 rounded-lg bg-muted">
-                {isSynced ? (
+                {user ? (
                    <div className="flex flex-col items-center gap-4">
-                     <p>You are logged in as {user.username}.</p>
+                     <p>You are logged in as {user.email}.</p>
                      <Button variant="destructive" className="w-full" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4"/>
                         Logout & Unsync
@@ -275,27 +332,35 @@ export default function ProfileMenu({
                       <TabsTrigger value="login">Login</TabsTrigger>
                       <TabsTrigger value="register">Register</TabsTrigger>
                     </TabsList>
-                    <TabsContent value="login" className="mt-4 space-y-4">
+                    <TabsContent value="login" className="mt-4">
+                      <form onSubmit={handleLogin} className="space-y-4">
                         <div>
                           <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="you@example.com" />
+                          <Input id="email" type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
                         </div>
                         <div>
                           <Label htmlFor="password">Password</Label>
-                          <Input id="password" type="password" />
+                          <Input id="password" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
                         </div>
-                        <Button className="w-full">Login</Button>
+                        <Button type="submit" className="w-full">Login</Button>
+                      </form>
                     </TabsContent>
-                    <TabsContent value="register" className="mt-4 space-y-4">
+                    <TabsContent value="register" className="mt-4">
+                       <form onSubmit={handleRegister} className="space-y-4">
+                        <div>
+                          <Label htmlFor="reg-name">Your Name</Label>
+                          <Input id="reg-name" type="text" placeholder="Alex" value={regName} onChange={e => setRegName(e.target.value)} />
+                        </div>
                         <div>
                           <Label htmlFor="reg-email">Email</Label>
-                          <Input id="reg-email" type="email" placeholder="you@example.com" />
+                          <Input id="reg-email" type="email" placeholder="you@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
                         </div>
                         <div>
                           <Label htmlFor="reg-password">Password</Label>
-                          <Input id="reg-password" type="password" />
+                          <Input id="reg-password" type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
                         </div>
-                        <Button className="w-full" variant="secondary">Create Account</Button>
+                        <Button type="submit" className="w-full" variant="secondary">Create Account</Button>
+                      </form>
                     </TabsContent>
                   </Tabs>
                 )}
