@@ -1,8 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
-import { dashboardData } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
+import { useAppContext } from '@/context/app-context';
 
 interface NotesCardProps {
   notes: {
@@ -12,7 +12,12 @@ interface NotesCardProps {
 }
 
 export default function NotesCard({ notes: initialNotes }: NotesCardProps) {
+  const { setData } = useAppContext();
   const [notes, setNotes] = React.useState(initialNotes);
+
+  React.useEffect(() => {
+    setNotes(initialNotes);
+  }, [initialNotes]);
 
   const makeChatEditable = (
     e: React.MouseEvent<HTMLDivElement>, 
@@ -21,7 +26,6 @@ export default function NotesCard({ notes: initialNotes }: NotesCardProps) {
     const bubble = e.currentTarget;
     const originalText = notes[userKey];
     
-    // Prevent making a bubble editable if it's already being edited
     if (bubble.querySelector('input')) return;
 
     bubble.innerHTML = `<input type="text" class="chat-bubble-input" value="${originalText}">`;
@@ -31,10 +35,13 @@ export default function NotesCard({ notes: initialNotes }: NotesCardProps) {
 
     const save = () => {
       const newText = input.value.trim();
-      bubble.textContent = newText || originalText;
+      const final_text = newText || originalText;
+      bubble.textContent = final_text;
+
       if (newText && newText !== originalText) {
-        setNotes(prev => ({...prev, [userKey]: newText}));
-        // Here you would typically save to a backend
+        const newNotes = {...notes, [userKey]: final_text };
+        setNotes(newNotes);
+        setData(prev => prev ? ({...prev, notes: newNotes}) : null);
       }
        bubble.addEventListener('click', (ev) => makeChatEditable(ev as any, userKey), { once: true });
     };

@@ -1,12 +1,13 @@
+
 'use client';
 import * as React from 'react';
 import Image from 'next/image';
-import { dashboardData } from '@/lib/data';
 import type { GalleryCategory, GalleryImage } from '@/lib/types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, Upload, Trash2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useAppContext } from '@/context/app-context';
 
 const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: () => void }) => {
   const firstImage = category.images[0]?.url || 'https://placehold.co/400x400/1e1e1e/333333?text=+';
@@ -37,11 +38,21 @@ const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: 
 };
 
 export default function GallerySection() {
-  const [gallery, setGallery] = React.useState(dashboardData.gallery);
+  const { data, setData } = useAppContext();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [activeCategory, setActiveCategory] = React.useState<GalleryCategory | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const gallery = data?.gallery || [];
+
+  const setGallery = (updater: (prevGallery: GalleryCategory[]) => GalleryCategory[]) => {
+    setData(prevData => {
+      if (!prevData) return null;
+      const newGallery = updater(prevData.gallery);
+      return { ...prevData, gallery: newGallery };
+    });
+  };
 
   const openModal = (category: GalleryCategory) => {
     setActiveCategory(category);

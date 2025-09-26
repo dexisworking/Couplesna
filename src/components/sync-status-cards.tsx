@@ -1,10 +1,10 @@
+
 'use client';
 
 import * as React from 'react';
-import { Clock, InfinityIcon, Music, Waves } from 'lucide-react';
+import { Waves } from 'lucide-react';
 import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
-import { dashboardData } from '@/lib/data';
 import type { User, Partner } from '@/lib/types';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { Input } from './ui/input';
@@ -12,6 +12,7 @@ import { Input } from './ui/input';
 interface SyncStatusCardsProps {
   user: User;
   partner: Partner;
+  distanceApartKm: number;
 }
 
 const InfoTile = ({ icon: Icon, title, children, className }: { icon?: React.ElementType, title: string, children: React.ReactNode, className?: string }) => (
@@ -42,15 +43,21 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
 
   return (
     <InfoTile title="Partner's Time">
-      <p className="text-4xl md:text-5xl font-bold mt-auto">{partnerTime ?? '--:--'}</p>
-      <p className="text-sm text-white/70">
-        {partner.location.timezone.split('/')[1]?.replace('_', ' ') || 'Local Time'}
-      </p>
+       {partnerTime !== null ? (
+        <>
+          <p className="text-4xl md:text-5xl font-bold mt-auto">{partnerTime}</p>
+          <p className="text-sm text-white/70">
+            {partner.location.timezone.split('/')[1]?.replace('_', ' ') || 'Local Time'}
+          </p>
+        </>
+      ) : (
+        <p className="text-4xl md:text-5xl font-bold mt-auto">--:--</p>
+      )}
     </InfoTile>
   );
 };
 
-export default function SyncStatusCards({ user, partner }: SyncStatusCardsProps) {
+export default function SyncStatusCards({ user, partner, distanceApartKm }: SyncStatusCardsProps) {
   return (
     <Carousel opts={{ align: "start", loop: false }} className="w-full">
       <CarouselContent className="-ml-4">
@@ -60,7 +67,7 @@ export default function SyncStatusCards({ user, partner }: SyncStatusCardsProps)
         <CarouselItem className="pl-4 basis-auto">
           <InfoTile title="Distance Apart">
             <div className="mt-auto text-center">
-              <p className="text-4xl md:text-5xl font-bold">{dashboardData.distanceApartKm.toLocaleString()}</p>
+              <p className="text-4xl md:text-5xl font-bold">{distanceApartKm.toLocaleString()}</p>
               <p className="text-sm text-white/70">kilometers</p>
             </div>
           </InfoTile>

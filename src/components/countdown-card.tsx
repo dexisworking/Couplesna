@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -12,6 +13,7 @@ import {
   DialogClose
 } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
+import { useAppContext } from '@/context/app-context';
 
 interface CountdownCardProps {
   nextMeetDate: string;
@@ -32,6 +34,7 @@ const TimeBox = ({ value, unit }: { value: number; unit: string }) => (
 );
 
 export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
+  const { setData } = useAppContext();
   const [targetDate, setTargetDate] = React.useState(new Date(nextMeetDate));
   const [newDate, setNewDate] = React.useState<Date | undefined>(targetDate);
   const [timeLeft, setTimeLeft] = React.useState<TimeLeft | null>(null);
@@ -50,7 +53,6 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   }, [targetDate]);
 
   React.useEffect(() => {
-    // Set initial time on mount to avoid hydration mismatch
     setTimeLeft(calculateTimeLeft());
 
     const timer = setInterval(() => {
@@ -60,9 +62,14 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
     return () => clearInterval(timer);
   }, [calculateTimeLeft]);
 
+  React.useEffect(() => {
+    setTargetDate(new Date(nextMeetDate));
+  }, [nextMeetDate]);
+
   const handleSetDate = () => {
     if (newDate) {
       setTargetDate(newDate);
+      setData(prevData => prevData ? ({ ...prevData, nextMeetDate: newDate.toISOString() }) : null);
     }
   };
 

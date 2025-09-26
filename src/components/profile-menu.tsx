@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,12 +29,8 @@ import { useToast } from '@/hooks/use-toast';
 import type { User, Partner } from '@/lib/types';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { useAppContext } from '@/context/app-context';
 
-interface ProfileMenuProps {
-  user: User;
-  partner: Partner;
-  coupleId: string;
-}
 
 const DetailItem = ({
   icon: Icon,
@@ -57,8 +54,12 @@ export default function ProfileMenu({
   user,
   partner,
   coupleId,
-}: ProfileMenuProps) {
-  const [isSynced, setIsSynced] = React.useState(true);
+}: {
+  user: User,
+  partner: Partner,
+  coupleId: string
+}) {
+  const { isSynced, setIsSynced } = useAppContext();
   const { toast } = useToast();
 
   const handleCopy = (text: string, label: string) => {
