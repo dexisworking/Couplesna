@@ -26,6 +26,7 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
   const [partnerTime, setPartnerTime] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    if (!partner?.location?.timezone) return;
     const getTime = () => {
       try {
         const zonedDate = toZonedTime(new Date(), partner.location.timezone);
@@ -39,7 +40,7 @@ const PartnerTimeTile = ({ partner }: { partner: Partner }) => {
     getTime();
     const interval = setInterval(getTime, 1000);
     return () => clearInterval(interval);
-  }, [partner.location.timezone]);
+  }, [partner?.location?.timezone]);
 
   return (
     <InfoTile title="Partner's Time">
@@ -67,7 +68,9 @@ export default function SyncStatusCards({ user, partner, distanceApartKm }: Sync
         <CarouselItem className="pl-4 basis-auto">
           <InfoTile title="Distance Apart">
             <div className="mt-auto text-center">
-              <p className="text-4xl md:text-5xl font-bold">{distanceApartKm.toLocaleString()}</p>
+              <p className="text-4xl md:text-5xl font-bold">
+                {distanceApartKm ? distanceApartKm.toLocaleString() : '...'}
+              </p>
               <p className="text-sm text-white/70">kilometers</p>
             </div>
           </InfoTile>
@@ -91,8 +94,14 @@ export default function SyncStatusCards({ user, partner, distanceApartKm }: Sync
         <CarouselItem className="pl-4 basis-auto">
           <InfoTile title="Partner is Listening to">
             <div className="mt-auto">
-              <p className="text-lg md:text-xl font-semibold truncate">{partner.media.track}</p>
-              <p className="text-xs text-white/50">on {partner.media.app}</p>
+              {partner?.media ? (
+                <>
+                  <p className="text-lg md:text-xl font-semibold truncate">{partner.media.track}</p>
+                  <p className="text-xs text-white/50">on {partner.media.app}</p>
+                </>
+              ) : (
+                <p className="text-lg md:text-xl font-semibold">Not available</p>
+              )}
             </div>
           </InfoTile>
         </CarouselItem>
