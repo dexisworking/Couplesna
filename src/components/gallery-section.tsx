@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight, Upload, Trash2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAppContext } from '@/context/app-context';
+import { useToast } from '@/hooks/use-toast';
 
 const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: () => void }) => {
   const firstImage = category.images[0]?.url || 'https://placehold.co/400x400/1e1e1e/333333?text=+';
@@ -39,6 +40,7 @@ const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: 
 
 export default function GallerySection() {
   const { data, setData } = useAppContext();
+  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [activeCategory, setActiveCategory] = React.useState<GalleryCategory | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
@@ -46,16 +48,21 @@ export default function GallerySection() {
 
   const gallery = data?.gallery || [];
 
-  const setGallery = (updater: (prevGallery: GalleryCategory[]) => GalleryCategory[]) => {
-    setData(prevData => {
-      if (!prevData) return null;
-      const newGallery = updater(prevData.gallery);
-      return { ...prevData, gallery: newGallery };
-    });
+  const updateGallery = async (newGallery: GalleryCategory[]) => {
+    try {
+      await setData({ gallery: newGallery });
+    } catch (e) {
+       toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: "Could not update the gallery. Please try again."
+      });
+    }
   };
 
   const openModal = (category: GalleryCategory) => {
-    setActiveCategory(category);
+    const categoryFromState = gallery.find(c => c.id === category.id) || category;
+    setActiveCategory(categoryFromState);
     setCurrentImageIndex(0);
     setIsModalOpen(true);
   };
@@ -79,39 +86,43 @@ export default function GallerySection() {
       url: URL.createObjectURL(file),
       hint: 'new upload',
     }));
+    
+    const newGallery = gallery.map(cat => {
+      if (cat.id === activeCategory.id) {
+        const updatedCategory = { ...cat, images: [...cat.images, ...newImages] };
+        setActiveCategory(updatedCategory);
+        return updatedCategory;
+      }
+      return cat;
+    });
 
-    setGallery(prevGallery =>
-      prevGallery.map(cat => {
-        if (cat.id === activeCategory.id) {
-          const updatedCategory = { ...cat, images: [...cat.images, ...newImages] };
-          setActiveCategory(updatedCategory);
-          return updatedCategory;
-        }
-        return cat;
-      })
-    );
+    updateGallery(newGallery);
+    toast({ title: "Images added!", description: "Your new moments are now shared."});
   };
 
   const handleDelete = () => {
      if (!activeCategory) return;
       const updatedImages = [...activeCategory.images];
       updatedImages.splice(currentImageIndex, 1);
-
-      setGallery(prevGallery =>
-        prevGallery.map(cat => {
-          if (cat.id === activeCategory.id) {
-            const updatedCategory = { ...cat, images: updatedImages };
-            setActiveCategory(updatedCategory);
-            // Show the previous image or the first one if the deleted one was the first
-            setCurrentImageIndex(Math.max(0, currentImageIndex - 1));
-            if (updatedImages.length === 0) {
-              closeModal();
-            }
-            return updatedCategory;
+      
+      const newGallery = gallery.map(cat => {
+        if (cat.id === activeCategory.id) {
+          const updatedCategory = { ...cat, images: updatedImages };
+          setActiveCategory(updatedCategory); // Update active category for UI
+          
+          // Show the previous image or the first one
+          setCurrentImageIndex(Math.max(0, currentImageIndex - 1));
+          
+          if (updatedImages.length === 0) {
+            closeModal();
           }
-          return cat;
-        })
-      );
+          return updatedCategory;
+        }
+        return cat;
+      });
+
+      updateGallery(newGallery);
+      toast({ title: "Image removed", variant: 'destructive'});
   };
 
   const currentImage = activeCategory?.images[currentImageIndex];

@@ -59,8 +59,10 @@ export default function ProfileMenu({
   partner: Partner,
   coupleId: string
 }) {
-  const { isSynced, setIsSynced } = useAppContext();
+  const { isSynced, setIsSynced, setCoupleId, coupleId: currentCoupleId } = useAppContext();
   const { toast } = useToast();
+  const [partnerIdInput, setPartnerIdInput] = React.useState('');
+
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -69,6 +71,31 @@ export default function ProfileMenu({
       description: `${label}: ${text}`,
     });
   };
+
+  const handleConnect = () => {
+    if(partnerIdInput.trim()){
+      setCoupleId(partnerIdInput.trim());
+      toast({
+        title: "Connecting...",
+        description: `Now syncing with Couple ID: ${partnerIdInput.trim()}`
+      })
+    } else {
+      toast({
+        variant: 'destructive',
+        title: "Invalid ID",
+        description: "Please enter a valid Couple ID."
+      })
+    }
+  }
+
+  const handleLogout = () => {
+    setIsSynced(false);
+    setCoupleId(null);
+     toast({
+        title: "You've been logged out.",
+        description: `You are no longer synced.`
+      })
+  }
 
   const renderProfileDetails = (person: User | Partner) => (
     <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
@@ -143,14 +170,14 @@ export default function ProfileMenu({
                       <Input
                         id="coupleId"
                         readOnly
-                        value={isSynced ? coupleId : 'Not Synced'}
+                        value={currentCoupleId || 'Not Synced'}
                         className="font-mono text-sm bg-background/50"
                       />
                       <Button
                         variant="outline"
                         size="icon"
-                        onClick={() => handleCopy(coupleId, 'Couple ID')}
-                        disabled={!isSynced}
+                        onClick={() => handleCopy(currentCoupleId || '', 'Couple ID')}
+                        disabled={!isSynced || !currentCoupleId}
                       >
                         <Copy className="h-4 w-4" />
                       </Button>
@@ -162,8 +189,10 @@ export default function ProfileMenu({
                       <Input
                         id="partnerId"
                         placeholder="Paste your partner's ID here"
+                        value={partnerIdInput}
+                        onChange={(e) => setPartnerIdInput(e.target.value)}
                       />
-                      <Button>Connect</Button>
+                      <Button onClick={handleConnect}>Connect</Button>
                     </div>
                   </div>
                 </div>
@@ -235,7 +264,7 @@ export default function ProfileMenu({
                 {isSynced ? (
                    <div className="flex flex-col items-center gap-4">
                      <p>You are logged in as {user.username}.</p>
-                     <Button variant="destructive" className="w-full" onClick={() => setIsSynced(false)}>
+                     <Button variant="destructive" className="w-full" onClick={handleLogout}>
                         <LogOut className="mr-2 h-4 w-4"/>
                         Logout & Unsync
                      </Button>

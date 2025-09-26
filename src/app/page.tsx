@@ -8,11 +8,14 @@ import GallerySection from '@/components/gallery-section';
 import SyncStatusCards from '@/components/sync-status-cards';
 import DateIdeaGenerator from '@/components/date-idea-generator';
 import { useAppContext } from '@/context/app-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
-  const { data } = useAppContext();
+  const { data, loading } = useAppContext();
 
-  if (!data) return <div>Loading...</div>;
+  if (loading || !data) {
+    return <LoadingSkeleton />;
+  }
 
   return (
     <div className="min-h-screen p-2 sm:p-4 bg-black">
@@ -50,3 +53,17 @@ export default function Home() {
     </div>
   );
 }
+
+const LoadingSkeleton = () => (
+  <div className="min-h-screen p-2 sm:p-4 bg-black">
+    <div className="w-full max-w-5xl mx-auto bg-background rounded-2xl sm:rounded-3xl p-4 md:p-8 min-h-[95vh] space-y-8">
+      <Skeleton className="h-[300px] w-full rounded-t-3xl -m-4 md:-m-8 mb-4 md:mb-8" />
+      <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <Skeleton className="lg:col-span-3 h-[220px] w-full" />
+        <Skeleton className="lg:col-span-2 h-[400px] w-full" />
+        <Skeleton className="h-[400px] w-full" />
+        <Skeleton className="lg:col-span-3 h-[300px] w-full" />
+      </main>
+    </div>
+  </div>
+);

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { useAppContext } from '@/context/app-context';
+import { useToast } from '@/hooks/use-toast';
 
 interface CountdownCardProps {
   nextMeetDate: string;
@@ -35,6 +36,7 @@ const TimeBox = ({ value, unit }: { value: number; unit: string }) => (
 
 export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   const { setData } = useAppContext();
+  const { toast } = useToast();
   const [targetDate, setTargetDate] = React.useState(new Date(nextMeetDate));
   const [newDate, setNewDate] = React.useState<Date | undefined>(targetDate);
   const [timeLeft, setTimeLeft] = React.useState<TimeLeft | null>(null);
@@ -53,8 +55,6 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   }, [targetDate]);
 
   React.useEffect(() => {
-    setTimeLeft(calculateTimeLeft());
-
     const timer = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
@@ -63,13 +63,29 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
   }, [calculateTimeLeft]);
 
   React.useEffect(() => {
-    setTargetDate(new Date(nextMeetDate));
+    const date = new Date(nextMeetDate);
+    setTargetDate(date);
+    setNewDate(date);
+    setTimeLeft(calculateTimeLeft());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nextMeetDate]);
 
-  const handleSetDate = () => {
+
+  const handleSetDate = async () => {
     if (newDate) {
-      setTargetDate(newDate);
-      setData(prevData => prevData ? ({ ...prevData, nextMeetDate: newDate.toISOString() }) : null);
+      try {
+        await setData({ nextMeetDate: newDate.toISOString() });
+        toast({
+          title: "Date Updated!",
+          description: "The countdown has been synced.",
+        })
+      } catch (e) {
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: "Could not save the new date. Please try again."
+        })
+      }
     }
   };
 
@@ -105,7 +121,7 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
               selected={newDate}
               onSelect={setNewDate}
               className="rounded-md border"
-              disabled={(date) => date < new Date()}
+              disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))}
             />
           </div>
           <DialogFooter>
