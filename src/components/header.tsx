@@ -52,35 +52,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
 
         <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300 pb-8", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
-            <svg
-                className="h-12 w-auto text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                  fill="url(#paint0_linear_1_2)"
-                />
-                <path
-                  d="M9.5 12.5c-1.04 0-2.04.18-3 .5.96.32 1.96.5 3 .5s2.04-.18 3-.5c-.96-.32-1.96-.5-3-.5zM14.5 12.5c1.04 0 2.04.18 3 .5-.96.32-1.96.5-3 .5s-2.04-.18-3-.5c.96-.32 1.96-.5 3-.5z"
-                  fill="white"
-                  opacity="0.9"
-                />
-                <defs>
-                  <linearGradient
-                    id="paint0_linear_1_2"
-                    x1="12"
-                    y1="3"
-                    x2="12"
-                    y2="21.35"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#F43F5E" />
-                    <stop offset="1" stopColor="#E11D48" />
-                  </linearGradient>
-                </defs>
-              </svg>
+             <Image src="/logo.png" alt="CouplesNA Logo" width={100} height={100} className="h-12 w-auto" />
           </div>
           <p className="text-white/70 mt-2 text-sm md:text-base">Your private space, connecting hearts across any distance.</p>
         </div>
