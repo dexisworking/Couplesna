@@ -12,8 +12,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const { data, loading, isSynced, user: authUser } = useAppContext();
+  const [isMounted, setIsMounted] = React.useState(false);
 
-  if (loading || !data) {
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted || loading || !data) {
     return <LoadingSkeleton />;
   }
   
