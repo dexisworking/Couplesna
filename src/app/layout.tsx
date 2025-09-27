@@ -3,11 +3,12 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from '@/context/app-context';
-import { Fredoka } from 'next/font/google';
+import { PT_Sans } from 'next/font/google';
 
-const fredoka = Fredoka({
+const ptSans = PT_Sans({
   subsets: ['latin'],
-  variable: '--font-fredoka',
+  weight: ['400', '700'],
+  variable: '--font-pt-sans',
 });
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fredoka.variable} dark`} suppressHydrationWarning>
+    <html lang="en" className={`${ptSans.variable} dark`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

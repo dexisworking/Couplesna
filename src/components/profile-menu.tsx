@@ -43,7 +43,6 @@ import { Label } from './ui/label';
 import { useAppContext } from '@/context/app-context';
 import { getClientSideFirebaseApp } from '@/lib/firebase';
 import { dashboardData as initialData } from '@/lib/data';
-import { Separator } from './ui/separator';
 
 const GoogleIcon = () => (
     <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
@@ -271,7 +270,7 @@ export default function ProfileMenu({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
+        <Button variant="ghost" aria-label="Open profile menu" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
           <Avatar className="h-8 w-8">
             <AvatarImage src={(isSynced && displayUser) ? displayUser.profilePic : undefined} alt={(isSynced && displayUser) ? displayUser.name : 'User'} />
             <AvatarFallback>
@@ -457,5 +456,3 @@ export default function ProfileMenu({
     </Dialog>
   );
 }
-
-    
