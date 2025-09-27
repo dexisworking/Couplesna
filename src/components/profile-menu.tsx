@@ -122,8 +122,13 @@ export default function ProfileMenu({
     try {
         const coupleDoc = await getDoc(coupleDocRef);
         if(!coupleDoc.exists()) {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            const partnerDoc = await getDoc(doc(db, 'users', partnerUid));
+            const userDocRef = doc(db, 'users', user.uid);
+            const partnerDocRef = doc(db, 'users', partnerUid);
+            
+            const [userDoc, partnerDoc] = await Promise.all([
+                getDoc(userDocRef),
+                getDoc(partnerDocRef)
+            ]);
 
             if (!partnerDoc.exists()) {
                 toast({ variant: 'destructive', title: 'Partner not found', description: 'The entered partner ID does not correspond to a registered user.' });
@@ -218,11 +223,19 @@ export default function ProfileMenu({
     try {
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: error.message,
-      });
+       if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          variant: 'default',
+          title: 'Sign-in cancelled',
+          description: 'You closed the sign-in window before completion.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: error.message,
+        });
+      }
     }
   };
 
