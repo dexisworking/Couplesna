@@ -10,6 +10,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
 import {
@@ -213,37 +214,15 @@ export default function ProfileMenu({
     const app = getClientSideFirebaseApp();
     if (!app) return;
     const auth = getAuth(app);
-    const db = getFirestore(app);
     const provider = new GoogleAuthProvider();
-
     try {
-      const result = await signInWithPopup(auth, provider);
-      const gUser = result.user;
-      const userDocRef = doc(db, 'users', gUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (!userDoc.exists()) {
-        await setDoc(userDocRef, {
-          name: gUser.displayName,
-          email: gUser.email,
-        });
-      }
-      toast({ title: 'Logged In Successfully!' });
-      setIsOpen(false);
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        toast({
-          variant: 'destructive',
-          title: 'Login Canceled',
-          description: 'The sign-in popup was closed before completing.',
-        });
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: error.message,
-        });
-      }
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error.message,
+      });
     }
   };
 

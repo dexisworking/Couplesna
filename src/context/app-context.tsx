@@ -7,7 +7,7 @@ import { dashboardData as initialData } from '@/lib/data';
 import { getClientSideFirebaseApp } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 
 interface AppContextType {
   data: DashboardData | null;
@@ -67,10 +67,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (!isClient) return;
+
     const app = getClientSideFirebaseApp();
-    if (!app) return;
     const auth = getAuth(app);
-    
+    const db = getFirestore(app);
+
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result) {
+          const gUser = result.user;
+          const userDocRef = doc(db, 'users', gUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+              name: gUser.displayName,
+              email: gUser.email,
+            });
+          }
+          toast({ title: 'Logged In Successfully!' });
+        }
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        if (errorCode === 'auth/popup-closed-by-user') {
+          toast({
+            variant: 'destructive',
+            title: 'Login Canceled',
+            description: 'The sign-in popup was closed before completing.',
+          });
+        } else {
+           toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: error.message,
+          });
+        }
+      });
+  
     const unsubscribe = onAuthStateChanged(auth, (authUser) => {
       setLoading(true);
       if (authUser) {
