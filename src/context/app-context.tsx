@@ -7,7 +7,7 @@ import { dashboardData as initialData } from '@/lib/data';
 import { getClientSideFirebaseApp } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import type { User as FirebaseAuthUser } from 'firebase/auth';
-import { getAuth, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 
 interface AppContextType {
   data: DashboardData | null;
@@ -72,27 +72,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // This function ensures a user document exists.
+    const ensureUserDocument = async (gUser: FirebaseAuthUser) => {
+        const userDocRef = doc(db, 'users', gUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+          await setDoc(userDocRef, {
+              name: gUser.displayName,
+              email: gUser.email,
+          }, { merge: true });
+        }
+    };
+  
+    // Handle the result of a Google Sign-In redirect.
     getRedirectResult(auth)
       .then(async (result) => {
         if (result) {
-          const gUser = result.user;
-          const userDocRef = doc(db, 'users', gUser.uid);
-          // Always set the doc to ensure the user exists for syncing.
-          await setDoc(userDocRef, {
-            name: gUser.displayName,
-            email: gUser.email,
-          }, { merge: true });
+          await ensureUserDocument(result.user);
           toast({ title: 'Logged In Successfully!' });
         }
       })
       .catch((error) => {
         const errorCode = error.code;
         if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
-          toast({
-            variant: 'destructive',
-            title: 'Login Canceled',
-            description: 'The sign-in popup was closed before completing.',
-          });
+           // This case is handled in profile-menu.tsx now
         } else {
            toast({
             variant: 'destructive',
@@ -102,16 +105,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
       });
   
-    const unsubscribe = onAuthStateChanged(auth, (authUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       setLoading(true);
       if (authUser) {
+        await ensureUserDocument(authUser);
         setUser(authUser);
         setUserId(authUser.uid);
         const savedCoupleId = localStorage.getItem('coupleId');
         if (savedCoupleId) {
           setCoupleIdState(savedCoupleId);
         } else {
-          findCoupleIdForUser(authUser.uid);
+          await findCoupleIdForUser(authUser.uid);
         }
       } else {
         setUser(null);
