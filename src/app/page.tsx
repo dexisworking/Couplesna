@@ -67,7 +67,7 @@ const LoadingSkeleton = () => (
   <div className="min-h-screen p-2 sm:p-4 bg-black">
     <div className="w-full max-w-5xl mx-auto bg-background rounded-2xl sm:rounded-3xl p-4 md:p-8 min-h-[95vh] space-y-8">
       {/* Keep the header part of the skeleton simple */}
-      <Skeleton className="h-[200px] md:h-[300px] w-full rounded-t-2xl sm:rounded-t-3xl -m-4 md:-m-8" />
+      <Skeleton className="h-[300px] md:h-[400px] w-full rounded-t-2xl sm:rounded-t-3xl -m-4 md:-m-8" />
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 pt-8">
         <Skeleton className="lg:col-span-3 h-[220px] w-full" />
         <Skeleton className="lg:col-span-2 h-[400px] w-full" />
