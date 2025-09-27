@@ -1,7 +1,5 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
     "projectId": "studio-7921805333-e23fb",
@@ -13,22 +11,12 @@ const firebaseConfig = {
     "messagingSenderId": "745439024438"
 };
 
-let app: FirebaseApp | null = null;
-
-function getClientSideFirebaseApp(): FirebaseApp | null {
-    if (typeof window !== 'undefined') {
-        if (!app) {
-             if (!getApps().length) {
-                app = initializeApp(firebaseConfig);
-             } else {
-                app = getApp();
-             }
-        }
-        return app;
+// Function to robustly get the Firebase app instance.
+function getClientSideFirebaseApp(): FirebaseApp {
+    if (getApps().length > 0) {
+        return getApp();
     }
-    return null;
+    return initializeApp(firebaseConfig);
 }
 
 export { getClientSideFirebaseApp };
-
-    
