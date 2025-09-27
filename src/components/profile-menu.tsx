@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -18,6 +19,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -414,9 +416,11 @@ export default function ProfileMenu({
                           </div>
                           <Button type="submit" className="w-full">Login</Button>
                         </form>
-                        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                            <GoogleIcon /> Sign in with Google
-                        </Button>
+                         <div className="space-y-2">
+                          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                              <GoogleIcon /> Sign in with Google
+                          </Button>
+                        </div>
                       </div>
                     </TabsContent>
                     <TabsContent value="register" className="mt-4">
@@ -436,9 +440,11 @@ export default function ProfileMenu({
                           </div>
                           <Button type="submit" className="w-full" variant="secondary">Create Account</Button>
                         </form>
-                        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                            <GoogleIcon /> Sign in with Google
-                        </Button>
+                        <div className="space-y-2">
+                          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                              <GoogleIcon /> Sign in with Google
+                          </Button>
+                        </div>
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -451,3 +457,5 @@ export default function ProfileMenu({
     </Dialog>
   );
 }
+
+    
