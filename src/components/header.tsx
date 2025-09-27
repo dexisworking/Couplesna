@@ -35,7 +35,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
       id="header-container"
       className={cn(
         'relative overflow-hidden transition-[height] duration-500 ease-in-out -m-4 md:-m-8 mb-4 md:mb-8 rounded-t-2xl sm:rounded-t-3xl',
-        isExpanded ? 'h-[70vh]' : 'h-[200px] md:h-[300px]'
+        isExpanded ? 'h-[70vh]' : 'h-[300px] md:h-[400px]'
       )}
     >
       <div className="absolute inset-0 z-0">
@@ -43,7 +43,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
       </div>
       <div id="header-gradient" className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-background to-transparent z-10" />
 
-      <div id="header-content" className="relative z-20 h-full flex flex-col justify-between items-center">
+      <div id="header-content" className="relative z-20 h-full flex flex-col justify-between">
         {/* Top Bar for Weather and Profile */}
         <div className="w-full p-4 flex justify-between items-start z-10">
           <WeatherCard weather={partner.weather} />
@@ -52,7 +52,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
 
         <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300 pb-8", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
-             <Image src="/logo.png" alt="CouplesNA Logo" width={100} height={100} className="h-40 w-auto" priority />
+             <Image src="/logo.png" alt="CouplesNA Logo" width={500} height={500} className="h-64 w-auto" priority />
           </div>
         </div>
         
