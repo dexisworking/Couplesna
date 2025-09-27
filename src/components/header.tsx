@@ -50,8 +50,8 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
         </div>
 
         <div className={cn("absolute inset-0 flex items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>
-          <div className="flex items-center justify-center">
-             <Image src="/logo.png" alt="CouplesNA Logo" width={1000} height={1000} className="h-[500px] w-auto" priority />
+          <div className="flex items-center justify-center p-4">
+             <Image src="/logo.png" alt="CouplesNA Logo" width={500} height={500} className="w-full h-auto max-w-[250px] md:max-w-[350px] max-h-[250px] md:max-h-[350px] object-contain" priority />
           </div>
         </div>
         
