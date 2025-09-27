@@ -217,21 +217,33 @@ export default function ProfileMenu({
     const provider = new GoogleAuthProvider();
 
     try {
-        const result = await signInWithPopup(auth, provider);
-        const gUser = result.user;
-        const userDocRef = doc(db, 'users', gUser.uid);
-        const userDoc = await getDoc(userDocRef);
+      const result = await signInWithPopup(auth, provider);
+      const gUser = result.user;
+      const userDocRef = doc(db, 'users', gUser.uid);
+      const userDoc = await getDoc(userDocRef);
 
-        if (!userDoc.exists()) {
-             await setDoc(userDocRef, {
-                name: gUser.displayName,
-                email: gUser.email,
-            });
-        }
-        toast({ title: 'Logged In Successfully!' });
-        setIsOpen(false);
-    } catch(error: any) {
-         toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          name: gUser.displayName,
+          email: gUser.email,
+        });
+      }
+      toast({ title: 'Logged In Successfully!' });
+      setIsOpen(false);
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast({
+          variant: 'destructive',
+          title: 'Login Canceled',
+          description: 'The sign-in popup was closed before completing.',
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed',
+          description: error.message,
+        });
+      }
     }
   };
 
