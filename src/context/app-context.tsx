@@ -77,20 +77,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (result) {
           const gUser = result.user;
           const userDocRef = doc(db, 'users', gUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          if (!userDoc.exists()) {
-            await setDoc(userDocRef, {
-              name: gUser.displayName,
-              email: gUser.email,
-            });
-          }
+          // Always set the doc to ensure the user exists for syncing.
+          await setDoc(userDocRef, {
+            name: gUser.displayName,
+            email: gUser.email,
+          }, { merge: true });
           toast({ title: 'Logged In Successfully!' });
         }
       })
       .catch((error) => {
         const errorCode = error.code;
-        if (errorCode === 'auth/popup-closed-by-user') {
+        if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
           toast({
             variant: 'destructive',
             title: 'Login Canceled',
