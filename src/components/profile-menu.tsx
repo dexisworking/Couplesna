@@ -283,7 +283,7 @@ export default function ProfileMenu({
               <TabsTrigger value="sync">
                 <Heart className="mr-2 h-4 w-4" /> Sync
               </TabsTrigger>
-              <TabsTrigger value="details" disabled={!isSynced}>
+              <TabsTrigger value="details" disabled={!user}>
                 <Users className="mr-2 h-4 w-4" /> Details
               </TabsTrigger>
               <TabsTrigger value="account">
@@ -370,8 +370,11 @@ export default function ProfileMenu({
                     </Tabs>
                  </div>
               ) : (
-                <div className="text-center py-10">
-                  <p>Log in and connect with your partner to see details.</p>
+                <div className="text-center py-10 text-muted-foreground">
+                  <p className="font-semibold">Connect to see details.</p>
+                  <p className="text-sm">
+                    Go to the 'Sync' tab, get your partner's ID, and connect to see your shared details.
+                  </p>
                 </div>
               )}
             </TabsContent>
@@ -447,3 +450,5 @@ export default function ProfileMenu({
     </Dialog>
   );
 }
+
+    
