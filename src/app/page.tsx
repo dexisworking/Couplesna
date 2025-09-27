@@ -18,8 +18,12 @@ export default function Home() {
     setIsClient(true);
   }, []);
 
-  if (!isClient || loading || !data) {
+  if (!isClient || loading) {
     return <LoadingSkeleton />;
+  }
+
+  if (!data) {
+     return <LoadingSkeleton />;
   }
   
   const loggedInUserIsUser = data.user.username === authUser?.uid;
