@@ -1,4 +1,3 @@
-
 'use client';
 import * as React from 'react';
 import dynamic from 'next/dynamic';
@@ -52,7 +51,7 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
 
         <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300 pb-8", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
-             <Image src="/logo.png" alt="CouplesNA Logo" width={100} height={100} className="h-12 w-auto" priority />
+             <Image src="/logo.png" alt="CouplesNA Logo" width={100} height={100} className="h-20 w-auto" priority />
           </div>
           <p className="text-white/70 mt-2 text-sm md:text-base">Your private space, connecting hearts across any distance.</p>
         </div>
