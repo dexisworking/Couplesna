@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -17,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -404,50 +402,44 @@ export default function ProfileMenu({
                       <TabsTrigger value="register">Register</TabsTrigger>
                     </TabsList>
                     <TabsContent value="login" className="mt-4">
-                      <form onSubmit={handleLogin} className="space-y-4">
-                        <div>
-                          <Label htmlFor="email">Email</Label>
-                          <Input id="email" type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
-                        </div>
-                        <div>
-                          <Label htmlFor="password">Password</Label>
-                          <Input id="password" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
-                        </div>
-                        <Button type="submit" className="w-full">Login</Button>
-                      </form>
-                      <div className="relative my-4 flex items-center">
-                        <Separator className="flex-grow" />
-                        <span className="mx-2 text-sm text-muted-foreground">OR</span>
-                        <Separator className="flex-grow" />
+                      <div className="space-y-4">
+                        <form onSubmit={handleLogin} className="space-y-4">
+                          <div>
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
+                          </div>
+                          <div>
+                            <Label htmlFor="password">Password</Label>
+                            <Input id="password" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
+                          </div>
+                          <Button type="submit" className="w-full">Login</Button>
+                        </form>
+                        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                            <GoogleIcon /> Sign in with Google
+                        </Button>
                       </div>
-                      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                          <GoogleIcon /> Sign in with Google
-                      </Button>
                     </TabsContent>
                     <TabsContent value="register" className="mt-4">
-                       <form onSubmit={handleRegister} className="space-y-4">
-                        <div>
-                          <Label htmlFor="reg-name">Your Name</Label>
-                          <Input id="reg-name" type="text" placeholder="Alex" value={regName} onChange={e => setRegName(e.target.value)} />
-                        </div>
-                        <div>
-                          <Label htmlFor="reg-email">Email</Label>
-                          <Input id="reg-email" type="email" placeholder="you@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
-                        </div>
-                        <div>
-                          <Label htmlFor="reg-password">Password</Label>
-                          <Input id="reg-password" type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
-                        </div>
-                        <Button type="submit" className="w-full" variant="secondary">Create Account</Button>
-                      </form>
-                       <div className="relative my-4 flex items-center">
-                        <Separator className="flex-grow" />
-                        <span className="mx-2 text-sm text-muted-foreground">OR</span>
-                        <Separator className="flex-grow" />
+                       <div className="space-y-4">
+                        <form onSubmit={handleRegister} className="space-y-4">
+                          <div>
+                            <Label htmlFor="reg-name">Your Name</Label>
+                            <Input id="reg-name" type="text" placeholder="Alex" value={regName} onChange={e => setRegName(e.target.value)} />
+                          </div>
+                          <div>
+                            <Label htmlFor="reg-email">Email</Label>
+                            <Input id="reg-email" type="email" placeholder="you@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
+                          </div>
+                          <div>
+                            <Label htmlFor="reg-password">Password</Label>
+                            <Input id="reg-password" type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
+                          </div>
+                          <Button type="submit" className="w-full" variant="secondary">Create Account</Button>
+                        </form>
+                        <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                            <GoogleIcon /> Sign in with Google
+                        </Button>
                       </div>
-                      <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                          <GoogleIcon /> Sign in with Google
-                      </Button>
                     </TabsContent>
                   </Tabs>
                 )}
