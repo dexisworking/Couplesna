@@ -12,18 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const { data, loading, isSynced, user: authUser } = useAppContext();
-  const [isClient, setIsClient] = React.useState(false);
 
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient || loading) {
+  if (loading || !data) {
     return <LoadingSkeleton />;
-  }
-
-  if (!data) {
-     return <LoadingSkeleton />;
   }
   
   const loggedInUserIsUser = data.user.username === authUser?.uid;
