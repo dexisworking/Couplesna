@@ -50,9 +50,9 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
           <ProfileMenu user={user} partner={partner} coupleId={coupleId} />
         </div>
 
-        <div className={cn("flex flex-col items-center justify-center text-center transition-opacity duration-300 -mb-24", isExpanded && "opacity-0 pointer-events-none")}>
+        <div className={cn("absolute inset-0 flex items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>
           <div className="flex items-center justify-center">
-             <Image src="/logo.png" alt="CouplesNA Logo" width={1000} height={1000} className="h-[400px] w-auto" priority />
+             <Image src="/logo.png" alt="CouplesNA Logo" width={1000} height={1000} className="h-[1000px] w-auto" priority />
           </div>
         </div>
         
