@@ -18,10 +18,9 @@ const LocationMap = dynamic(() => import('./location-map'), {
 interface HeaderProps {
   user: User;
   partner: Partner;
-  coupleId: string;
 }
 
-export default function Header({ user, partner, coupleId }: HeaderProps) {
+export default function Header({ user, partner }: HeaderProps) {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [isClient, setIsClient] = React.useState(false);
 
@@ -43,10 +42,9 @@ export default function Header({ user, partner, coupleId }: HeaderProps) {
       <div id="header-gradient" className="absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t from-background to-transparent z-10" />
 
       <div id="header-content" className="relative z-20 h-full flex flex-col justify-between">
-        {/* Top Bar for Weather and Profile */}
-        <div className="w-full p-4 flex justify-between items-start z-10">
+        <div className="z-10 flex w-full flex-wrap items-start justify-between gap-3 p-3 sm:p-4">
           <WeatherCard weather={partner.weather} />
-          <ProfileMenu user={user} partner={partner} coupleId={coupleId} />
+          <ProfileMenu user={user} partner={partner} />
         </div>
 
         <div className={cn("absolute inset-0 flex items-center justify-center text-center transition-opacity duration-300", isExpanded && "opacity-0 pointer-events-none")}>

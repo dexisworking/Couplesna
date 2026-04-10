@@ -1,6 +1,5 @@
 import { Sun, Cloudy, Wind, Umbrella, Snowflake, Loader2 } from 'lucide-react';
 import type { Partner } from '@/lib/types';
-import Image from 'next/image';
 
 interface WeatherCardProps {
   weather: Partner['weather'];
@@ -17,9 +16,9 @@ const weatherIcons: { [key: string]: React.ElementType } = {
 export default function WeatherCard({ weather }: WeatherCardProps) {
   if (!weather) {
     return (
-      <div id="weather-widget" className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full pl-2 pr-3 py-2 border border-white/10 text-white text-sm">
-        <Loader2 className="w-8 h-8 animate-spin" />
-        <span id="weather-temp">--°C</span>
+      <div id="weather-widget" className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-sm text-white backdrop-blur-md">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span id="weather-temp">Weather loading...</span>
       </div>
     );
   }
@@ -27,9 +26,10 @@ export default function WeatherCard({ weather }: WeatherCardProps) {
   const Icon = weatherIcons[weather.icon] || Sun;
 
   return (
-    <div id="weather-widget" className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-full pl-2 pr-3 py-2 border border-white/10 text-white text-sm">
-      <Icon className="w-8 h-8 text-yellow-300" />
+    <div id="weather-widget" className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2 text-sm text-white backdrop-blur-md">
+      <Icon className="h-5 w-5 text-yellow-300" />
       <span id="weather-temp">{weather.tempCelsius}°C</span>
+      <span className="hidden text-white/70 sm:inline">{weather.condition}</span>
     </div>
   );
 }

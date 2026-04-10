@@ -1,24 +1,31 @@
-
 'use client';
+
 import * as React from 'react';
 import Image from 'next/image';
-import type { GalleryCategory, GalleryImage } from '@/lib/types';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight, Upload, Trash2, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Loader2, Trash2, Upload, X } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import type { GalleryCategory } from '@/lib/types';
 import { useAppContext } from '@/context/app-context';
 import { useToast } from '@/hooks/use-toast';
 
-const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: () => void }) => {
-  const firstImage = category.images[0]?.url || 'https://placehold.co/400x400/1e1e1e/333333?text=+';
+const AlbumTile = ({
+  category,
+  onClick,
+}: {
+  category: GalleryCategory;
+  onClick: () => void;
+}) => {
+  const firstImage =
+    category.images[0]?.url || 'https://placehold.co/400x400/1e1e1e/333333?text=+';
 
   return (
     <div
       onClick={onClick}
-      className="album-tile group aspect-square bg-cover bg-center rounded-xl cursor-pointer relative overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105"
+      className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-cover bg-center transition-transform duration-300 ease-in-out hover:scale-[1.02]"
       tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      onKeyDown={(event) => event.key === 'Enter' && onClick()}
     >
       <Image
         src={firstImage}
@@ -28,10 +35,10 @@ const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: 
         className="object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-0.5 rounded-full border border-white/10">
+      <div className="absolute right-2 top-2 rounded-full border border-white/10 bg-black/60 px-2 py-0.5 text-xs text-white">
         {category.images.length}
       </div>
-      <div className="album-title absolute bottom-0 left-0 right-0 p-2 md:p-4 text-sm md:text-base font-semibold text-white">
+      <div className="absolute bottom-0 left-0 right-0 p-2 text-sm font-semibold text-white md:p-4 md:text-base">
         {category.title}
       </div>
     </div>
@@ -39,116 +46,159 @@ const AlbumTile = ({ category, onClick }: { category: GalleryCategory; onClick: 
 };
 
 export default function GallerySection() {
-  const { data, setData } = useAppContext();
+  const { data, refreshData, isSynced } = useAppContext();
   const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [activeCategory, setActiveCategory] = React.useState<GalleryCategory | null>(null);
+  const [activeCategoryId, setActiveCategoryId] = React.useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const gallery = data?.gallery || [];
+  const gallery = React.useMemo(() => data?.gallery || [], [data?.gallery]);
+  const activeCategory = React.useMemo(
+    () => gallery.find((category) => category.id === activeCategoryId) || null,
+    [activeCategoryId, gallery]
+  );
 
-  const updateGallery = async (newGallery: GalleryCategory[]) => {
-    try {
-      await setData({ gallery: newGallery });
-    } catch (e) {
-       toast({
-        variant: "destructive",
-        title: "Update Failed",
-        description: "Could not update the gallery. Please try again."
-      });
-    }
-  };
+  const currentImage = activeCategory?.images[currentImageIndex];
 
   const openModal = (category: GalleryCategory) => {
-    const categoryFromState = gallery.find(c => c.id === category.id) || category;
-    setActiveCategory(categoryFromState);
+    setActiveCategoryId(category.id);
     setCurrentImageIndex(0);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setActiveCategory(null);
+    setActiveCategoryId(null);
+    setCurrentImageIndex(0);
   };
 
   const showImage = (index: number) => {
-    if (!activeCategory) return;
-    const newIndex = (index + activeCategory.images.length) % activeCategory.images.length;
-    setCurrentImageIndex(newIndex);
+    if (!activeCategory || activeCategory.images.length === 0) {
+      return;
+    }
+
+    const nextIndex = (index + activeCategory.images.length) % activeCategory.images.length;
+    setCurrentImageIndex(nextIndex);
   };
 
-  const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || !activeCategory) return;
+    if (!files || files.length === 0 || !activeCategory) {
+      return;
+    }
 
-    const newImages: GalleryImage[] = Array.from(files).map(file => ({
-      url: URL.createObjectURL(file),
-      hint: 'new upload',
-    }));
-    
-    const newGallery = gallery.map(cat => {
-      if (cat.id === activeCategory.id) {
-        const updatedCategory = { ...cat, images: [...cat.images, ...newImages] };
-        setActiveCategory(updatedCategory);
-        return updatedCategory;
-      }
-      return cat;
-    });
+    setIsUploading(true);
 
-    updateGallery(newGallery);
-    toast({ title: "Images added!", description: "Your new moments are now shared."});
-  };
+    try {
+      const formData = new FormData();
+      formData.append('albumId', activeCategory.id);
+      Array.from(files).forEach((file) => formData.append('files', file));
 
-  const handleDelete = () => {
-     if (!activeCategory) return;
-      const updatedImages = [...activeCategory.images];
-      updatedImages.splice(currentImageIndex, 1);
-      
-      const newGallery = gallery.map(cat => {
-        if (cat.id === activeCategory.id) {
-          const updatedCategory = { ...cat, images: updatedImages };
-          setActiveCategory(updatedCategory); // Update active category for UI
-          
-          // Show the previous image or the first one
-          setCurrentImageIndex(Math.max(0, currentImageIndex - 1));
-          
-          if (updatedImages.length === 0) {
-            closeModal();
-          }
-          return updatedCategory;
-        }
-        return cat;
+      const response = await fetch('/api/gallery/upload', {
+        method: 'POST',
+        body: formData,
       });
 
-      updateGallery(newGallery);
-      toast({ title: "Image removed", variant: 'destructive'});
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error || 'Upload failed.');
+      }
+
+      await refreshData();
+      toast({
+        title: 'Images uploaded',
+        description: 'Your new moments are now stored in your shared gallery.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Upload failed',
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
+      event.target.value = '';
+      setIsUploading(false);
+    }
   };
 
-  const currentImage = activeCategory?.images[currentImageIndex];
+  const handleDelete = async () => {
+    if (!currentImage?.id) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/gallery/${currentImage.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error || 'Delete failed.');
+      }
+
+      await refreshData();
+      setCurrentImageIndex((value) => Math.max(0, value - 1));
+      toast({
+        title: 'Image removed',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Delete failed',
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeCategory && activeCategory.images.length === 0) {
+      closeModal();
+    }
+  }, [activeCategory]);
 
   return (
     <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-        {gallery.map(category => (
+      <div className="mb-4 text-center text-sm text-white/60">
+        {isSynced
+          ? 'Open an album to upload or remove photos.'
+          : 'Connect with your partner to unlock persistent photo uploads.'}
+      </div>
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
+        {gallery.map((category) => (
           <AlbumTile key={category.id} category={category} onClick={() => openModal(category)} />
         ))}
       </div>
-      
+
       {isModalOpen && activeCategory && (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="bg-black/90 border-0 max-w-none w-screen h-screen p-0 flex items-center justify-center backdrop-blur-lg">
-            <Button variant="ghost" size="icon" onClick={closeModal} className="absolute top-4 right-4 text-white hover:bg-white/10 z-50">
+          <DialogContent className="flex h-screen w-screen max-w-none items-center justify-center border-0 bg-black/90 p-0 backdrop-blur-lg">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={closeModal}
+              className="absolute right-4 top-4 z-50 text-white hover:bg-white/10"
+            >
               <X className="h-6 w-6" />
             </Button>
-            
+
             {activeCategory.images.length > 1 && (
-              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex - 1)} className="absolute left-4 md:left-10 text-white p-2 md:p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => showImage(currentImageIndex - 1)}
+                className="absolute left-4 z-50 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 md:left-10 md:p-3"
+              >
                 <ChevronLeft className="h-5 w-5 md:h-6 md:w-6" />
               </Button>
             )}
 
-            <div className="relative flex flex-col items-center justify-center">
+            <div className="relative flex max-w-[92vw] flex-col items-center justify-center">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentImage?.url}
@@ -156,36 +206,62 @@ export default function GallerySection() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  className="max-h-[80vh] max-w-[90vw] md:max-w-[80vw]"
+                  className="max-h-[76vh] max-w-[90vw] md:max-w-[80vw]"
                 >
                   {currentImage && (
-                     <Image
+                    <Image
                       src={currentImage.url}
                       alt={activeCategory.title}
                       width={1200}
                       height={800}
-                      className="object-contain rounded-lg shadow-2xl"
+                      className="rounded-lg object-contain shadow-2xl"
                       data-ai-hint={currentImage.hint}
                     />
                   )}
                 </motion.div>
               </AnimatePresence>
 
-              <div id="carousel-actions" className="mt-4 md:mt-6 flex items-center gap-2 md:gap-4">
-                <p id="carouselCounter" className="text-white/80 text-sm font-mono">
-                  {currentImageIndex + 1} / {activeCategory.images.length}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:mt-6 md:gap-4">
+                <p className="font-mono text-sm text-white/80">
+                  {activeCategory.images.length === 0 ? '0 / 0' : `${currentImageIndex + 1} / ${activeCategory.images.length}`}
                 </p>
-                <Button onClick={() => fileInputRef.current?.click()} size="sm" className="text-xs px-3 h-8">
-                  <Upload className="mr-1 h-3 w-3" /> Add
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  size="sm"
+                  className="h-9 px-3 text-xs"
+                  disabled={!isSynced || isUploading}
+                >
+                  {isUploading ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Upload className="mr-1 h-3 w-3" />
+                  )}
+                  Add
                 </Button>
-                <Button onClick={handleDelete} variant="destructive" size="sm" className="text-xs px-3 h-8">
-                  <Trash2 className="mr-1 h-3 w-3" /> Delete
+                <Button
+                  onClick={handleDelete}
+                  variant="destructive"
+                  size="sm"
+                  className="h-9 px-3 text-xs"
+                  disabled={!isSynced || isDeleting || !currentImage?.id}
+                >
+                  {isDeleting ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-1 h-3 w-3" />
+                  )}
+                  Delete
                 </Button>
               </div>
             </div>
-            
+
             {activeCategory.images.length > 1 && (
-              <Button variant="ghost" size="icon" onClick={() => showImage(currentImageIndex + 1)} className="absolute right-4 md:right-10 text-white p-2 md:p-3 bg-white/10 rounded-full hover:bg-white/20 z-50">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => showImage(currentImageIndex + 1)}
+                className="absolute right-4 z-50 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 md:right-10 md:p-3"
+              >
                 <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
               </Button>
             )}

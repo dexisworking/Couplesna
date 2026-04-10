@@ -1,0 +1,12 @@
+
+> nextn@0.1.0 lint
+> next lint
+
+Converting circular structure to JSON
+    --> starting at object with constructor 'Object'
+    |     property 'configs' -> object with constructor 'Object'
+    |     property 'flat' -> object with constructor 'Object'
+    |     ...
+    |     property 'plugins' -> object with constructor 'Object'
+    --- property 'react' closes the circle
+Referenced from: C:\Users\LENOVO\Desktop\Couplesna Firebase\.eslintrc.json

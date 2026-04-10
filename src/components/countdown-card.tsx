@@ -35,7 +35,7 @@ const TimeBox = ({ value, unit }: { value: number; unit: string }) => (
 );
 
 export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
-  const { setData } = useAppContext();
+  const { setData, isSynced } = useAppContext();
   const { toast } = useToast();
   const [targetDate, setTargetDate] = React.useState(new Date(nextMeetDate));
   const [newDate, setNewDate] = React.useState<Date | undefined>(targetDate);
@@ -79,7 +79,7 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
           title: "Date Updated!",
           description: "The countdown has been synced.",
         })
-      } catch (e) {
+      } catch {
         toast({
           variant: "destructive",
           title: "Update Failed",
@@ -109,7 +109,13 @@ export default function CountdownCard({ nextMeetDate }: CountdownCardProps) {
       
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="link" className="mt-4 text-xs text-primary hover:text-primary/90">Set Date</Button>
+          <Button
+            variant="link"
+            className="mt-4 text-xs text-primary hover:text-primary/90"
+            disabled={!isSynced}
+          >
+            Set Date
+          </Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>

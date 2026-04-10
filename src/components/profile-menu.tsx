@@ -1,58 +1,46 @@
-
 'use client';
 
 import * as React from 'react';
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, getFirestore } from 'firebase/firestore';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import {
   AtSign,
   Calendar,
+  Check,
   Copy,
   Heart,
+  Loader2,
   LogOut,
+  MailPlus,
   Paintbrush,
   Star,
   User as UserIcon,
   Users,
-  Wand2,
+  X,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import type { User, Partner, DashboardData } from '@/lib/types';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
 import { useAppContext } from '@/context/app-context';
-import { getClientSideFirebaseApp } from '@/lib/firebase';
-import { dashboardData as initialData } from '@/lib/data';
+import type { Partner, User } from '@/lib/types';
 
 const GoogleIcon = () => (
-    <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
-      <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
-      <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
-      <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
-      <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,34,44,32C44,27.355,44,24.019,44,20L43.611,20.083z"></path>
-    </svg>
-  );
+  <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
+    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path>
+    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path>
+    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path>
+    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C43.021,36.251,44,34,44,32C44,27.355,44,24.019,44,20L43.611,20.083z"></path>
+  </svg>
+);
 
 const DetailItem = ({
   icon: Icon,
@@ -64,404 +52,518 @@ const DetailItem = ({
   value: string | undefined;
 }) => (
   <div className="flex items-start gap-4">
-    <Icon className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
+    <Icon className="mt-1 h-5 w-5 flex-shrink-0 text-muted-foreground" />
     <div className="flex-grow">
-      <p className="font-semibold text-sm">{label}</p>
-      <p className="text-muted-foreground text-sm">{value || 'Not set'}</p>
+      <p className="text-sm font-semibold">{label}</p>
+      <p className="text-sm text-muted-foreground">{value || 'Not set'}</p>
     </div>
   </div>
 );
 
 export default function ProfileMenu({
-  user: userData,
-  partner: partnerData,
+  user: currentUser,
+  partner,
 }: {
-  user: User,
-  partner: Partner,
-  coupleId: string
+  user: User;
+  partner: Partner;
 }) {
-  const { user, isSynced, setCoupleId, data } = useAppContext();
+  const {
+    user,
+    invites,
+    isSynced,
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    signOut,
+    requestConnection,
+    acceptInvite,
+    declineInvite,
+    supabaseReady,
+  } = useAppContext();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState('sync');
-
-  // Form states
   const [partnerIdInput, setPartnerIdInput] = React.useState('');
-  const [loginEmail, setLoginEmail] = React.useState('');
-  const [loginPassword, setLoginPassword] = React.useState('');
-  const [regEmail, setRegEmail] = React.useState('');
-  const [regPassword, setRegPassword] = React.useState('');
-  const [regName, setRegName] = React.useState('');
+  const [activeTab, setActiveTab] = React.useState('sync');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+
+  const incomingInvites = invites.filter((invite) => invite.direction === 'incoming');
+  const outgoingInvites = invites.filter((invite) => invite.direction === 'outgoing');
 
   const handleCopy = (text: string, label: string) => {
-    if (!text) return;
+    if (!text) {
+      return;
+    }
+
     navigator.clipboard.writeText(text);
     toast({
-      title: 'Copied to clipboard!',
+      title: 'Copied to clipboard',
       description: `${label}: ${text}`,
     });
   };
 
   const handleConnect = async () => {
-    const app = getClientSideFirebaseApp();
-    if (!app || !partnerIdInput.trim() || !user) {
-      toast({ variant: 'destructive', title: 'Invalid ID', description: 'Please enter a valid User ID to connect.' });
-      return;
-    }
-    const db = getFirestore(app);
-
-    const partnerUid = partnerIdInput.trim();
-    if(partnerUid === user.uid) {
-      toast({ variant: 'destructive', title: 'Cannot connect to self', description: 'You cannot use your own User ID.' });
-      return;
-    }
-
-    const newCoupleId = [user.uid, partnerUid].sort().join('_');
-    const coupleDocRef = doc(db, 'couples', newCoupleId);
-
-    try {
-        const coupleDoc = await getDoc(coupleDocRef);
-        if(!coupleDoc.exists()) {
-            const userDocRef = doc(db, 'users', user.uid);
-            const partnerDocRef = doc(db, 'users', partnerUid);
-            
-            const [userDoc, partnerDoc] = await Promise.all([
-                getDoc(userDocRef),
-                getDoc(partnerDocRef)
-            ]);
-
-            if (!partnerDoc.exists()) {
-                toast({ variant: 'destructive', title: 'Partner not found', description: 'The entered partner ID does not correspond to a registered user.' });
-                return;
-            }
-            
-            const newCoupleData: DashboardData = {
-                ...initialData,
-                coupleId: newCoupleId,
-                users: [user.uid, partnerUid],
-                user: { ...initialData.user, username: user.uid, name: user.displayName || "User" },
-                partner: { ...initialData.partner, username: partnerUid, name: partnerDoc.data()?.name || "Partner" },
-            };
-            await setDoc(coupleDocRef, newCoupleData);
-        }
-        setCoupleId(newCoupleId);
-        toast({ title: 'Connection successful!', description: `You are now synced with your partner.` });
-        setIsOpen(false);
-    } catch(error) {
-        console.error("Error connecting couple:", error);
-        toast({ variant: 'destructive', title: 'Connection Failed', description: 'Could not connect with partner. Please check the ID and try again.' });
-    }
-  };
-  
-  const handleLogout = () => {
-    const app = getClientSideFirebaseApp();
-    if (!app) return;
-    const auth = getAuth(app);
-    signOut(auth);
-    setCoupleId(null);
-    toast({
-        title: "You've been logged out.",
-    });
-    setIsOpen(false);
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const app = getClientSideFirebaseApp();
-    if (!app) return;
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    if (!regEmail || !regPassword || !regName) {
-      toast({ variant: 'destructive', title: 'Missing fields', description: 'Please fill out all fields.'});
-      return;
-    }
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, regEmail, regPassword);
-      await updateProfile(userCredential.user, { displayName: regName });
-      
-      const userDocRef = doc(db, 'users', userCredential.user.uid);
-      await setDoc(userDocRef, {
-          name: regName,
-          email: regEmail,
+    if (!partnerIdInput.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Missing partner ID',
+        description: 'Enter your partner username or user ID first.',
       });
+      return;
+    }
 
-      toast({ title: 'Account Created!', description: 'You can now log in.' });
-      setRegEmail('');
-      setRegPassword('');
-      setRegName('');
-      setActiveTab('account'); // Switch to login tab
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Registration Failed', description: error.message });
+    setIsSubmitting(true);
+    try {
+      const result = await requestConnection(partnerIdInput);
+      setPartnerIdInput('');
+      toast({
+        title: result.autoAccepted ? 'Connected successfully' : 'Invite sent',
+        description: result.autoAccepted
+          ? 'You already had a matching invite, so the connection is now active.'
+          : 'Your partner can accept the invite from their Couplesna profile menu.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Connection failed',
+        description: error instanceof Error ? error.message : 'Unable to send the invite.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-     e.preventDefault();
-     const app = getClientSideFirebaseApp();
-     if (!app) return;
-     const auth = getAuth(app);
-
-    if (!loginEmail || !loginPassword) {
-      toast({ variant: 'destructive', title: 'Missing fields', description: 'Please provide email and password.'});
-      return;
-    }
+  const handleInviteDecision = async (inviteId: string, decision: 'accept' | 'decline') => {
+    setIsSubmitting(true);
     try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
-      toast({ title: 'Logged In Successfully!' });
-      setIsOpen(false); // Close dialog on successful login
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Login Failed', description: error.message });
-    }
-  }
-
-  const handleGoogleSignIn = async () => {
-    const app = getClientSideFirebaseApp();
-    if (!app) return;
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (error: any) {
-       if (error.code === 'auth/popup-closed-by-user') {
+      if (decision === 'accept') {
+        await acceptInvite(inviteId);
         toast({
-          variant: 'default',
-          title: 'Sign-in cancelled',
-          description: 'You closed the sign-in window before completion.',
+          title: 'Invite accepted',
+          description: 'Your shared dashboard is now active.',
         });
       } else {
+        await declineInvite(inviteId);
         toast({
-          variant: 'destructive',
-          title: 'Login Failed',
-          description: error.message,
+          title: 'Invite declined',
         });
       }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not update invite',
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsSubmitting(true);
+    try {
+      await signOut();
+      toast({
+        title: "You've been logged out.",
+      });
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Logout failed',
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsSubmitting(true);
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in failed',
+        description: error instanceof Error ? error.message : 'Unable to start Google sign-in.',
+      });
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailSignIn = async () => {
+    setIsSubmitting(true);
+    try {
+      await signInWithEmail(email, password);
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Sign-in failed',
+        description: error instanceof Error ? error.message : 'Invalid credentials.',
+      });
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEmailSignUp = async () => {
+    setIsSubmitting(true);
+    try {
+      await signUpWithEmail(email, password);
+      toast({
+        title: 'Verification Email Sent',
+        description: 'Check your email and click the link to verify your account before logging in.',
+      });
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Sign-up failed',
+        description: error instanceof Error ? error.message : 'Unable to create account.',
+      });
+      setIsSubmitting(false);
     }
   };
 
   const renderProfileDetails = (person: User | Partner) => (
-    <div className="space-y-6 p-4 bg-muted/50 rounded-lg">
+    <div className="space-y-6 rounded-lg bg-muted/50 p-4">
       <DetailItem
         icon={Calendar}
         label="Birthday"
-        value={person.details.birthday ? new Date(person.details.birthday).toLocaleDateString(undefined, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }) : undefined}
+        value={
+          person.details?.birthday
+            ? new Date(person.details.birthday).toLocaleDateString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            : undefined
+        }
       />
-      <DetailItem
-        icon={Paintbrush}
-        label="Favorite Color"
-        value={person.details.favoriteColor}
-      />
-      <DetailItem
-        icon={Star}
-        label="Favorite Song"
-        value={person.details.favoriteSong}
-      />
+      <DetailItem icon={Paintbrush} label="Favorite Color" value={person.details?.favoriteColor} />
+      <DetailItem icon={Star} label="Favorite Song" value={person.details?.favoriteSong} />
       <DetailItem icon={AtSign} label="Username" value={person.username} />
     </div>
   );
-  
-  const currentUserId = user?.uid;
-  
-  const loggedInUserIsUser = data?.user?.username === currentUserId;
-  const displayUser = loggedInUserIsUser ? data?.user : data?.partner;
-  const displayPartner = loggedInUserIsUser ? data?.partner : data?.user;
 
+  const displayName =
+    (user?.user_metadata?.full_name as string | undefined) ||
+    (user?.user_metadata?.name as string | undefined) ||
+    user?.email ||
+    currentUser.name;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" aria-label="Open profile menu" className="relative h-10 w-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/10">
+        <Button
+          variant="ghost"
+          aria-label="Open profile menu"
+          className="relative h-10 w-10 rounded-full border border-white/10 bg-black/30 backdrop-blur-md hover:bg-black/50"
+        >
           <Avatar className="h-8 w-8">
-            <AvatarImage src={(isSynced && displayUser) ? displayUser.profilePic : undefined} alt={(isSynced && displayUser) ? displayUser.name : 'User'} />
-            <AvatarFallback>
-              {(isSynced && displayUser?.name) ? displayUser.name.charAt(0) : <UserIcon />}
-            </AvatarFallback>
+            <AvatarImage src={currentUser.profilePic} alt={currentUser.name} />
+            <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] overflow-y-auto border-white/10 bg-card sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Profile & Settings</DialogTitle>
-           <DialogDescription>
-            {user ? `Welcome, ${user.displayName || user.email}` : 'Manage your connection, view details, and handle your account.'}
+          <DialogDescription>
+            {user
+              ? `Signed in as ${displayName}`
+              : 'Sign in, connect with your partner, and manage your shared space.'}
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-4">
-          <Tabs defaultValue="sync" value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="sync">
-                <Heart className="mr-2 h-4 w-4" /> Sync
-              </TabsTrigger>
-              <TabsTrigger value="details" disabled={!user}>
-                <Users className="mr-2 h-4 w-4" /> Details
-              </TabsTrigger>
-              <TabsTrigger value="account">
-                <UserIcon className="mr-2 h-4 w-4" /> Account
-              </TabsTrigger>
-            </TabsList>
+        <Tabs
+          defaultValue="sync"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="mt-4 w-full"
+        >
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="sync">
+              <Heart className="mr-2 h-4 w-4" /> Sync
+            </TabsTrigger>
+            <TabsTrigger value="details">
+              <Users className="mr-2 h-4 w-4" /> Details
+            </TabsTrigger>
+            <TabsTrigger value="account">
+              <UserIcon className="mr-2 h-4 w-4" /> Account
+            </TabsTrigger>
+          </TabsList>
 
-            {/* SYNC TAB */}
-            <TabsContent value="sync" className="mt-6">
-              <div className="space-y-6">
-                <div className="p-4 rounded-lg bg-muted space-y-4">
-                  <h3 className="font-semibold">Connect with your Partner</h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="coupleId">Your User ID</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="coupleId"
-                        readOnly
-                        value={currentUserId || 'Please log in'}
-                        className="font-mono text-sm bg-background/50"
-                      />
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleCopy(currentUserId || '', 'Your User ID')}
-                        disabled={!user}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="partnerId">Partner's User ID</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="partnerId"
-                        placeholder="Paste your partner's ID here"
-                        value={partnerIdInput}
-                        onChange={(e) => setPartnerIdInput(e.target.value)}
-                         disabled={!user || isSynced}
-                      />
-                      <Button onClick={handleConnect} disabled={!user || isSynced}>
-                        {isSynced ? 'Connected' : 'Connect'}
-                      </Button>
-                    </div>
-                     {isSynced && <p className="text-xs text-muted-foreground">You are already connected. Unsync from the Account tab to connect to someone else.</p>}
-                  </div>
+          <TabsContent value="sync" className="mt-6 space-y-6">
+            {!supabaseReady && (
+              <div className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+                Supabase environment variables are not configured yet, so sign-in and partner sync are disabled.
+              </div>
+            )}
+
+            <div className="space-y-4 rounded-lg bg-muted p-4">
+              <h3 className="font-semibold">Connect with your Partner</h3>
+              <div className="space-y-2">
+                <Label htmlFor="userId">Your User ID</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    id="userId"
+                    readOnly
+                    value={user?.id || 'Sign in to get your ID'}
+                    className="bg-background/50 font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCopy(user?.id || '', 'Your User ID')}
+                    disabled={!user}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </Button>
                 </div>
               </div>
-            </TabsContent>
-
-            {/* DETAILS TAB */}
-            <TabsContent value="details" className="mt-6">
-              {isSynced && displayUser && displayPartner ? (
-                 <div className="space-y-6">
-                    <div className="flex flex-col items-center justify-center gap-2 p-6 rounded-lg bg-muted">
-                        <div className="flex items-center justify-center gap-4">
-                            <Avatar className="h-16 w-16 border-4 border-background shadow-md">
-                                <AvatarImage src={displayUser.profilePic} alt={displayUser.name} />
-                                <AvatarFallback>{displayUser.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <Heart className="h-8 w-8 text-primary animate-pulse" />
-                            <Avatar className="h-16 w-16 border-4 border-background shadow-md">
-                                <AvatarImage src={displayPartner.profilePic} alt={displayPartner.name} />
-                                <AvatarFallback>{displayPartner.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                        </div>
-                        <h3 className="mt-4 text-xl font-semibold">{displayUser.name} & {displayPartner.name}</h3>
-                        <div className="text-center text-sm text-muted-foreground">
-                            <p>Anniversary: {displayUser.details.anniversary ? new Date(displayUser.details.anniversary).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not set'}</p>
-                        </div>
-                    </div>
-                    <Tabs defaultValue="user-details" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="user-details">{displayUser.name} (You)</TabsTrigger>
-                            <TabsTrigger value="partner-details">{displayPartner.name}</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="user-details" className="mt-4">
-                            {renderProfileDetails(displayUser)}
-                        </TabsContent>
-                        <TabsContent value="partner-details" className="mt-4">
-                            {renderProfileDetails(displayPartner)}
-                        </TabsContent>
-                    </Tabs>
-                 </div>
-              ) : (
-                <div className="text-center py-10 text-muted-foreground">
-                  <p className="font-semibold">Connect to see details.</p>
-                  <p className="text-sm">
-                    Go to the 'Sync' tab, get your partner's ID, and connect to see your shared details.
-                  </p>
+              <div className="space-y-2">
+                <Label htmlFor="username">Your Username</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    id="username"
+                    readOnly
+                    value={currentUser.username || 'Not set'}
+                    className="bg-background/50 font-mono text-sm"
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCopy(currentUser.username, 'Your username')}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </Button>
                 </div>
-              )}
-            </TabsContent>
-
-            {/* ACCOUNT TAB */}
-            <TabsContent value="account" className="mt-6">
-              <div className="p-4 rounded-lg bg-muted">
-                {user ? (
-                   <div className="flex flex-col items-center gap-4">
-                     <p>You are logged in as {user.email}.</p>
-                     <Button variant="destructive" className="w-full" onClick={handleLogout}>
-                        <LogOut className="mr-2 h-4 w-4"/>
-                        Logout & Unsync
-                     </Button>
-                   </div>
-                ) : (
-                  <Tabs defaultValue="login" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="login">Login</TabsTrigger>
-                      <TabsTrigger value="register">Register</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="login" className="mt-4">
-                      <div className="space-y-4">
-                        <form onSubmit={handleLogin} className="space-y-4">
-                          <div>
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} />
-                          </div>
-                          <div>
-                            <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} />
-                          </div>
-                          <Button type="submit" className="w-full">Login</Button>
-                        </form>
-                         <div className="space-y-2">
-                          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                              <GoogleIcon /> Sign in with Google
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="register" className="mt-4">
-                       <div className="space-y-4">
-                        <form onSubmit={handleRegister} className="space-y-4">
-                          <div>
-                            <Label htmlFor="reg-name">Your Name</Label>
-                            <Input id="reg-name" type="text" placeholder="Alex" value={regName} onChange={e => setRegName(e.target.value)} />
-                          </div>
-                          <div>
-                            <Label htmlFor="reg-email">Email</Label>
-                            <Input id="reg-email" type="email" placeholder="you@example.com" value={regEmail} onChange={e => setRegEmail(e.target.value)} />
-                          </div>
-                          <div>
-                            <Label htmlFor="reg-password">Password</Label>
-                            <Input id="reg-password" type="password" value={regPassword} onChange={e => setRegPassword(e.target.value)} />
-                          </div>
-                          <Button type="submit" className="w-full" variant="secondary">Create Account</Button>
-                        </form>
-                        <div className="space-y-2">
-                          <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
-                              <GoogleIcon /> Sign in with Google
-                          </Button>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="partnerId">Partner Username or User ID</Label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    id="partnerId"
+                    placeholder="Paste your partner username or ID"
+                    value={partnerIdInput}
+                    onChange={(event) => setPartnerIdInput(event.target.value)}
+                    disabled={!user || isSynced || isSubmitting || !supabaseReady}
+                  />
+                  <Button onClick={handleConnect} disabled={!user || isSynced || isSubmitting || !supabaseReady}>
+                    {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <MailPlus className="mr-2 h-4 w-4" />
+                    )}
+                    {isSynced ? 'Connected' : 'Send'}
+                  </Button>
+                </div>
+                {isSynced && (
+                  <p className="text-xs text-muted-foreground">
+                    You are already connected. Sign out to switch accounts.
+                  </p>
                 )}
               </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+            </div>
+
+            {incomingInvites.length > 0 && (
+              <div className="space-y-3 rounded-lg bg-muted p-4">
+                <h3 className="font-semibold">Incoming Invites</h3>
+                {incomingInvites.map((invite) => (
+                  <div
+                    key={invite.id}
+                    className="flex flex-col gap-3 rounded-lg border border-white/10 bg-background/40 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={invite.otherAvatarUrl || undefined} alt={invite.otherName} />
+                        <AvatarFallback>{invite.otherName.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{invite.otherName}</p>
+                        <p className="text-sm text-muted-foreground">@{invite.otherUsername}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => handleInviteDecision(invite.id, 'accept')} disabled={isSubmitting}>
+                        <Check className="mr-2 h-4 w-4" />
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleInviteDecision(invite.id, 'decline')}
+                        disabled={isSubmitting}
+                      >
+                        <X className="mr-2 h-4 w-4" />
+                        Decline
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {outgoingInvites.length > 0 && (
+              <div className="space-y-3 rounded-lg bg-muted p-4">
+                <h3 className="font-semibold">Pending Requests</h3>
+                {outgoingInvites.map((invite) => (
+                  <div
+                    key={invite.id}
+                    className="flex items-center justify-between rounded-lg border border-white/10 bg-background/40 p-3"
+                  >
+                    <div>
+                      <p className="font-medium">{invite.otherName}</p>
+                      <p className="text-sm text-muted-foreground">@{invite.otherUsername}</p>
+                    </div>
+                    <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Waiting</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="details" className="mt-6">
+            {isSynced ? (
+              <div className="space-y-6">
+                <div className="rounded-lg bg-muted p-6 text-center">
+                  <div className="flex items-center justify-center gap-4">
+                    <Avatar className="h-16 w-16 border-4 border-background shadow-md">
+                      <AvatarImage src={currentUser.profilePic} alt={currentUser.name} />
+                      <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <Heart className="h-8 w-8 animate-pulse text-primary" />
+                    <Avatar className="h-16 w-16 border-4 border-background shadow-md">
+                      <AvatarImage src={partner.profilePic} alt={partner.name} />
+                      <AvatarFallback>{partner.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <h3 className="mt-4 text-xl font-semibold">
+                    {currentUser.name} & {partner.name}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Anniversary:{' '}
+                    {currentUser.details?.anniversary
+                      ? new Date(currentUser.details.anniversary).toLocaleDateString(undefined, {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })
+                      : 'Not set'}
+                  </p>
+                </div>
+                <Tabs defaultValue="user-details" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="user-details">{currentUser.name} (You)</TabsTrigger>
+                    <TabsTrigger value="partner-details">{partner.name}</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="user-details" className="mt-4">
+                    {renderProfileDetails(currentUser)}
+                  </TabsContent>
+                  <TabsContent value="partner-details" className="mt-4">
+                    {renderProfileDetails(partner)}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            ) : (
+              <div className="rounded-lg bg-muted/50 p-6 text-center text-muted-foreground">
+                Send or accept a connection invite to unlock your shared details and gallery.
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="account" className="mt-6">
+            <div className="rounded-lg bg-muted p-4">
+              {user ? (
+                <div className="flex flex-col items-center gap-4">
+                  <p className="text-center text-sm text-muted-foreground">
+                    Signed in as <span className="font-medium text-foreground">{user.email}</span>
+                  </p>
+                  <Button variant="destructive" className="w-full" onClick={handleLogout} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <LogOut className="mr-2 h-4 w-4" />
+                    )}
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        placeholder="you@example.com" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)} 
+                        disabled={isSubmitting || !supabaseReady} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input 
+                        id="password" 
+                        type="password" 
+                        placeholder="••••••••" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        disabled={isSubmitting || !supabaseReady} 
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        className="w-full flex-1" 
+                        onClick={handleEmailSignIn} 
+                        disabled={isSubmitting || !email || !password || !supabaseReady}
+                      >
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Log In'}
+                      </Button>
+                      <Button 
+                        variant="secondary" 
+                        className="w-full flex-1" 
+                        onClick={handleEmailSignUp} 
+                        disabled={isSubmitting || !email || !password || !supabaseReady}
+                      >
+                        {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Sign Up'}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-white/10" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-muted px-2 text-muted-foreground">Or continue with</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-full py-6 text-lg"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSubmitting || !supabaseReady}
+                  >
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                    Sign in with Google
+                  </Button>
+                  
+                  {!supabaseReady && (
+                    <p className="text-center text-sm text-muted-foreground">
+                      Add the Supabase environment variables from `.env.example` to enable auth.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
 }
-
-    

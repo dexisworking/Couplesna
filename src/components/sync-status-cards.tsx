@@ -7,7 +7,6 @@ import { format } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import type { User, Partner } from '@/lib/types';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
-import { Input } from './ui/input';
 
 interface SyncStatusCardsProps {
   user: User;
@@ -15,8 +14,8 @@ interface SyncStatusCardsProps {
   distanceApartKm: number;
 }
 
-const InfoTile = ({ icon: Icon, title, children, className }: { icon?: React.ElementType, title: string, children: React.ReactNode, className?: string }) => (
-  <div className={`flex-shrink-0 w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-accent/50 backdrop-blur-lg border border-white/10 rounded-3xl p-4 flex flex-col text-white ${className}`}>
+const InfoTile = ({ title, children, className }: { title: string, children: React.ReactNode, className?: string }) => (
+  <div className={`flex h-[160px] w-[220px] flex-shrink-0 flex-col rounded-3xl border border-white/10 bg-accent/50 p-4 text-white backdrop-blur-lg md:h-[180px] md:w-[280px] ${className}`}>
     <p className="text-sm text-white/70">{title}</p>
     {children}
   </div>
@@ -76,18 +75,21 @@ export default function SyncStatusCards({ user, partner, distanceApartKm }: Sync
           </InfoTile>
         </CarouselItem>
         <CarouselItem className="pl-4 basis-auto">
-           <div className="w-[240px] md:w-[280px] h-[160px] md:h-[180px] bg-gradient-to-br from-rose-500 to-purple-600 rounded-3xl p-4 flex flex-col text-white">
+           <div className="flex h-[160px] w-[220px] flex-shrink-0 flex-col rounded-3xl bg-gradient-to-br from-rose-500 to-orange-500 p-4 text-white md:h-[180px] md:w-[280px]">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
                         <Waves className="h-6 w-6"/>
                     </div>
                     <div>
                         <p className="font-semibold">Shared Vibe</p>
-                        <p className="text-xs text-white/80">What's your mood?</p>
+                        <p className="text-xs text-white/80">Now playing on your side</p>
                     </div>
                 </div>
                 <div className="mt-auto">
-                    <Input className="w-full bg-transparent border-b border-white/30 focus:outline-none pb-1 h-auto rounded-none px-0" type="text" defaultValue={user.details.favoriteSong} placeholder="Listening to..."/>
+                    <p className="text-lg font-semibold md:text-xl">
+                      {user.media?.track || user.details.favoriteSong || 'Nothing synced yet'}
+                    </p>
+                    <p className="text-xs text-white/70">{user.media?.app || 'Favorite track'}</p>
                 </div>
             </div>
         </CarouselItem>

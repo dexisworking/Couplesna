@@ -3,6 +3,7 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import type { Partner } from '@/lib/types';
 import { useMemo } from 'react';
 import { Skeleton } from './ui/skeleton';
+import { getMapProviderConfig, isMapProviderConfigured } from '@/lib/providers/maps';
 
 interface LocationMapProps {
   partnerLocation: Partner['location'];
@@ -90,9 +91,10 @@ const mapStyles = [
 ];
 
 export default function LocationMap({ partnerLocation }: LocationMapProps) {
+  const mapConfig = getMapProviderConfig();
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    googleMapsApiKey: mapConfig.apiKey,
   });
 
   const center = useMemo(() => ({
@@ -108,7 +110,7 @@ export default function LocationMap({ partnerLocation }: LocationMapProps) {
     return <Skeleton className="w-full h-full" />;
   }
   
-  if(!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+  if(!isMapProviderConfigured()) {
     return <div className="w-full h-full bg-muted/50 flex items-center justify-center text-center text-white p-4">
       Please add your Google Maps API Key to the .env file to display the map.
     </div>;

@@ -15,11 +15,12 @@ import { Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { suggestDateIdeas } from '@/ai/flows/ai-suggested-date-ideas';
+import { generateDateIdeas } from '@/lib/providers/date-ideas';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/form';
 import { Input } from './ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from './ui/card';
+import { useAppContext } from '@/context/app-context';
 
 interface DateIdeaGeneratorProps {
   userLocation: string;
@@ -34,6 +35,7 @@ const formSchema = z.object({
 });
 
 export default function DateIdeaGenerator({ userLocation, partnerLocation }: DateIdeaGeneratorProps) {
+  const { user } = useAppContext();
   const [isOpen, setIsOpen] = React.useState(false);
   const [ideas, setIdeas] = React.useState<string[] | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -53,7 +55,9 @@ export default function DateIdeaGenerator({ userLocation, partnerLocation }: Dat
     setIsLoading(true);
     setIdeas(null);
     try {
-      const result = await suggestDateIdeas(values);
+      const result = await generateDateIdeas({
+          ...values
+      });
       if (result.dateIdeas && result.dateIdeas.length > 0) {
         setIdeas(result.dateIdeas);
       } else {
@@ -67,7 +71,7 @@ export default function DateIdeaGenerator({ userLocation, partnerLocation }: Dat
       toast({
         variant: 'destructive',
         title: 'An error occurred',
-        description: 'Failed to get date ideas. Please try again later.',
+        description: error instanceof Error ? error.message : 'Failed to get date ideas.',
       });
       console.error(error);
     } finally {
@@ -91,16 +95,18 @@ export default function DateIdeaGenerator({ userLocation, partnerLocation }: Dat
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="default" size="lg">
+        <Button variant="default" size="lg" disabled={!user}>
           <Sparkles className="mr-2 h-5 w-5" />
           Get Date Ideas
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md md:max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1.5rem)] overflow-y-auto sm:max-w-md md:max-w-lg">
         <DialogHeader>
           <DialogTitle>AI Date Idea Generator</DialogTitle>
           <DialogDescription>
-            Let AI suggest some fun date ideas based on your locations and interests.
+            {user
+              ? 'Let AI suggest some fun date ideas based on your locations and interests.'
+              : 'Sign in to generate ideas from the protected AI flow.'}
           </DialogDescription>
         </DialogHeader>
         
@@ -120,7 +126,7 @@ export default function DateIdeaGenerator({ userLocation, partnerLocation }: Dat
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="userLocation"
@@ -139,7 +145,7 @@ export default function DateIdeaGenerator({ userLocation, partnerLocation }: Dat
                 name="partnerLocation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Partner's Location</FormLabel>
+                    <FormLabel>Partner&apos;s Location</FormLabel>
                     <FormControl>
                       <Input placeholder="City, Country" {...field} />
                     </FormControl>
@@ -149,7 +155,7 @@ export default function DateIdeaGenerator({ userLocation, partnerLocation }: Dat
               />
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={isLoading} className="w-full">
+                <Button type="submit" disabled={isLoading || !user} className="w-full">
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

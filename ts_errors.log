@@ -1,0 +1,3 @@
+src/actions/couple.ts(3,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+src/actions/user.ts(3,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+src/app/api/auth/[...nextauth]/route.ts(4,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.

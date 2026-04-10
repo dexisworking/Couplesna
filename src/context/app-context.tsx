@@ -1,244 +1,345 @@
-
 'use client';
+
 import * as React from 'react';
-import { doc, getFirestore, onSnapshot, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import type { DashboardData } from '@/lib/types';
-import { dashboardData as initialData } from '@/lib/data';
-import { getClientSideFirebaseApp } from '@/lib/firebase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { acceptInvite, declineInvite, getAppSnapshot, requestConnection, saveDashboardData } from '@/actions/app';
+import { buildFallbackDashboard } from '@/lib/data';
+import { createBrowserSupabaseClient } from '@/lib/supabase/browser';
+import { isSupabaseConfigured } from '@/lib/supabase/env';
+import type { AppDataSnapshot, ConnectionInvite, DashboardData, DashboardPerson } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import type { User as FirebaseAuthUser } from 'firebase/auth';
-import { getAuth, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+
+type DashboardPatch = Partial<Pick<DashboardData, 'nextMeetDate' | 'notes' | 'distanceApartKm'>>;
 
 interface AppContextType {
   data: DashboardData | null;
-  setData: (data: Partial<DashboardData>) => Promise<void>;
+  setData: (data: DashboardPatch) => Promise<void>;
+  refreshData: () => Promise<void>;
   isSynced: boolean;
-  setIsSynced: React.Dispatch<React.SetStateAction<boolean>>;
   coupleId: string | null;
-  setCoupleId: (id: string | null) => void;
   loading: boolean;
-  user: FirebaseAuthUser | null;
-  userId: string | null;
-  setUserId: React.Dispatch<React.SetStateAction<string | null>>;
-  partnerId: string | null;
+  user: SupabaseUser | null;
+  invites: ConnectionInvite[];
+  signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  requestConnection: (partnerIdentifier: string) => Promise<{ autoAccepted: boolean }>;
+  acceptInvite: (inviteId: string) => Promise<void>;
+  declineInvite: (inviteId: string) => Promise<void>;
+  supabaseReady: boolean;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [data, setDataState] = React.useState<DashboardData | null>(initialData);
-  const [isSynced, setIsSynced] = React.useState(false);
-  const [coupleId, setCoupleIdState] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const { toast } = useToast();
-  const [user, setUser] = React.useState<FirebaseAuthUser | null>(null);
-  
-  const [userId, setUserId] = React.useState<string | null>(null);
-  const [partnerId, setPartnerId] = React.useState<string | null>(null);
-  const [isClient, setIsClient] = React.useState(false);
+function buildAuthFallbackProfile(user: SupabaseUser | null): Partial<DashboardPerson> | undefined {
+  if (!user) {
+    return undefined;
+  }
 
-  React.useEffect(() => {
-    setIsClient(true);
+  const name =
+    (user.user_metadata?.full_name as string | undefined) ||
+    (user.user_metadata?.name as string | undefined) ||
+    user.email?.split('@')[0] ||
+    'Couplesna User';
+
+  return {
+    id: user.id,
+    name,
+    email: user.email,
+    username:
+      (user.user_metadata?.user_name as string | undefined) ||
+      user.email?.split('@')[0] ||
+      user.id.slice(0, 8),
+    profilePic:
+      (user.user_metadata?.avatar_url as string | undefined) ||
+      (user.user_metadata?.picture as string | undefined),
+  };
+}
+
+export function AppProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+  const supabaseReady = isSupabaseConfigured();
+  const [user, setUser] = React.useState<SupabaseUser | null>(null);
+  const [data, setDashboard] = React.useState<DashboardData | null>(
+    buildFallbackDashboard()
+  );
+  const [coupleId, setCoupleId] = React.useState<string | null>(null);
+  const [invites, setInvites] = React.useState<ConnectionInvite[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const applySnapshot = React.useCallback((snapshot: AppDataSnapshot) => {
+    setDashboard(snapshot.dashboard);
+    setCoupleId(snapshot.coupleId);
+    setInvites(snapshot.invites);
   }, []);
 
-  const findCoupleIdForUser = async (uid: string) => {
-    const app = getClientSideFirebaseApp();
-    if (!app) return;
-    const db = getFirestore(app);
-    const couplesRef = collection(db, 'couples');
-    const q = query(couplesRef, where('users', 'array-contains', uid));
-    
-    try {
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            const coupleDoc = querySnapshot.docs[0];
-             setCoupleId(coupleDoc.id);
-        } else {
-             console.log("No existing couple found for this user.");
-             setDataState(initialData);
-             setIsSynced(false);
-        }
-    } catch (error) {
-        console.error("Error finding couple ID:", error);
-    } finally {
-        setLoading(false);
-    }
-  }
-
-  React.useEffect(() => {
-    if (!isClient) return;
-
-    const app = getClientSideFirebaseApp();
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // This function ensures a user document exists.
-    const ensureUserDocument = async (gUser: FirebaseAuthUser) => {
-        const userDocRef = doc(db, 'users', gUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (!userDoc.exists()) {
-          await setDoc(userDocRef, {
-              name: gUser.displayName,
-              email: gUser.email,
-          }, { merge: true });
-        }
-    };
-  
-    // Handle the result of a Google Sign-In redirect.
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result) {
-          await ensureUserDocument(result.user);
-          toast({ title: 'Logged In Successfully!' });
-        }
-      })
-      .catch((error) => {
-        const errorCode = error.code;
-        if (errorCode === 'auth/popup-closed-by-user' || errorCode === 'auth/cancelled-popup-request') {
-           // This case is handled in profile-menu.tsx now
-        } else {
-           toast({
-            variant: 'destructive',
-            title: 'Login Failed',
-            description: error.message,
-          });
-        }
-      });
-  
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      setLoading(true);
-      if (authUser) {
-        await ensureUserDocument(authUser);
-        setUser(authUser);
-        setUserId(authUser.uid);
-        const savedCoupleId = localStorage.getItem('coupleId');
-        if (savedCoupleId) {
-          setCoupleIdState(savedCoupleId);
-        } else {
-          await findCoupleIdForUser(authUser.uid);
-        }
-      } else {
-        setUser(null);
-        setUserId(null);
-        setPartnerId(null);
-        setCoupleId(null);
-        setIsSynced(false);
-        setDataState(initialData);
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]);
-
-  const setCoupleId = (id: string | null) => {
-    if (id) {
-       localStorage.setItem('coupleId', id);
-       setCoupleIdState(id);
-    } else {
-      localStorage.removeItem('coupleId');
-      setCoupleIdState(null);
-    }
-  }
-
-  React.useEffect(() => {
-    if (!isClient) return;
-    const savedCoupleId = localStorage.getItem('coupleId');
-    if (savedCoupleId && !coupleId) {
-      setCoupleIdState(savedCoupleId);
-    }
-  }, [isClient, coupleId]);
-
-
-  React.useEffect(() => {
-    if (!isClient || !user || !coupleId) {
-      if (!user) setLoading(false);
+  const refreshData = React.useCallback(async () => {
+    if (!user) {
+      setDashboard(buildFallbackDashboard());
+      setCoupleId(null);
+      setInvites([]);
+      setLoading(false);
       return;
-    };
+    }
 
-    const app = getClientSideFirebaseApp();
-    if (!app) return;
-    const db = getFirestore(app);
-
-    setIsSynced(true);
     setLoading(true);
-    const docRef = doc(db, 'couples', coupleId);
 
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const docData = docSnap.data() as DashboardData;
-        setDataState(docData);
-      } else {
-        console.log("Couple document not found. This might happen if a user logs out and the ID is cleared.");
-        setIsSynced(false);
-        setDataState(initialData);
-        setCoupleId(null); // Clear invalid coupleId
-      }
-      setLoading(false);
-    }, (error) => {
-      console.error("Firestore snapshot error: ", error);
+    try {
+      const snapshot = await getAppSnapshot();
+      applySnapshot(snapshot);
+    } catch (error) {
+      console.error('Failed to refresh app data:', error);
+      setDashboard(buildFallbackDashboard(buildAuthFallbackProfile(user)));
+      setCoupleId(null);
+      setInvites([]);
       toast({
         variant: 'destructive',
-        title: 'Connection Error',
-        description: "Could not connect to the database. Displaying local data."
+        title: 'Sync unavailable',
+        description: error instanceof Error ? error.message : 'Unable to load Couplesna data.',
       });
-      setDataState(initialData);
-      setIsSynced(false);
+    } finally {
       setLoading(false);
+    }
+  }, [applySnapshot, toast, user]);
+
+  React.useEffect(() => {
+    if (!supabaseReady) {
+      setLoading(false);
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    let active = true;
+
+    const initialize = async () => {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      if (active) {
+        React.startTransition(() => {
+          setUser(currentUser);
+        });
+      }
+    };
+
+    void initialize();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) {
+        return;
+      }
+
+      React.startTransition(() => {
+        setUser(session?.user ?? null);
+      });
     });
 
-    return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coupleId, user, isClient]);
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [supabaseReady]);
 
-  const handleSetData = async (newData: Partial<DashboardData>) => {
-    const app = getClientSideFirebaseApp();
-    if (!app || !coupleId || !data) {
-       toast({
+  React.useEffect(() => {
+    void refreshData();
+  }, [refreshData]);
+
+  React.useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      void refreshData();
+    }, 60_000);
+
+    return () => window.clearInterval(interval);
+  }, [refreshData, user]);
+
+  const setData = React.useCallback(
+    async (patch: DashboardPatch) => {
+      const previous = data;
+      if (previous) {
+        setDashboard({
+          ...previous,
+          ...patch,
+          notes: patch.notes
+            ? {
+                ...previous.notes,
+                ...patch.notes,
+              }
+            : previous.notes,
+        });
+      }
+
+      try {
+        const snapshot = await saveDashboardData(patch);
+        applySnapshot(snapshot);
+      } catch (error) {
+        if (previous) {
+          setDashboard(previous);
+        }
+
+        throw error;
+      }
+    },
+    [applySnapshot, data]
+  );
+
+  const signInWithGoogle = React.useCallback(async () => {
+    if (!supabaseReady) {
+      toast({
         variant: 'destructive',
-        title: 'Not Synced',
-        description: "You must be connected to a partner to save changes."
+        title: 'Supabase not configured',
+        description: 'Add your Supabase environment variables to enable Google sign-in.',
       });
       return;
     }
 
-    const db = getFirestore(app);
-    const docRef = doc(db, 'couples', coupleId);
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
 
-    try {
-      const currentData = JSON.parse(JSON.stringify(data));
-      const updatedData = { ...currentData, ...newData };
-      await setDoc(docRef, updatedData, { merge: true });
-    } catch (error) {
-      console.error("Error updating document: ", error);
-      toast({
-        variant: 'destructive',
-        title: 'Sync Error',
-        description: "Could not save changes. Please try again."
-      });
+    if (error) {
       throw error;
     }
-  };
-  
-  const value = { 
-    data: data || initialData,
-    setData: handleSetData, 
-    isSynced, 
-    setIsSynced, 
-    coupleId, 
-    setCoupleId, 
-    loading, 
-    user,
-    userId,
-    setUserId,
-    partnerId
-  };
+  }, [supabaseReady, toast]);
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
+  const signInWithEmail = React.useCallback(async (email: string, password: string) => {
+    if (!supabaseReady) {
+      toast({
+        variant: 'destructive',
+        title: 'Supabase not configured',
+        description: 'Add your Supabase environment variables to enable sign-in.',
+      });
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      throw error;
+    }
+  }, [supabaseReady, toast]);
+
+  const signUpWithEmail = React.useCallback(async (email: string, password: string) => {
+    if (!supabaseReady) {
+      toast({
+        variant: 'destructive',
+        title: 'Supabase not configured',
+        description: 'Add your Supabase environment variables to enable sign-up.',
+      });
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
+    });
+
+    if (error) {
+      throw error;
+    }
+  }, [supabaseReady, toast]);
+
+  const handleSignOut = React.useCallback(async () => {
+    if (!supabaseReady) {
+      setUser(null);
+      setDashboard(buildFallbackDashboard());
+      setCoupleId(null);
+      setInvites([]);
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      throw error;
+    }
+
+    setUser(null);
+    setDashboard(buildFallbackDashboard());
+    setCoupleId(null);
+    setInvites([]);
+  }, [supabaseReady]);
+
+  const handleRequestConnection = React.useCallback(
+    async (partnerIdentifier: string) => {
+      const result = await requestConnection(partnerIdentifier);
+      await refreshData();
+      return result;
+    },
+    [refreshData]
   );
+
+  const handleAcceptInvite = React.useCallback(
+    async (inviteId: string) => {
+      await acceptInvite(inviteId);
+      await refreshData();
+    },
+    [refreshData]
+  );
+
+  const handleDeclineInvite = React.useCallback(
+    async (inviteId: string) => {
+      await declineInvite(inviteId);
+      await refreshData();
+    },
+    [refreshData]
+  );
+
+  const value = React.useMemo(
+    () => ({
+      data,
+      setData,
+      refreshData,
+      isSynced: Boolean(user && coupleId),
+      coupleId,
+      loading,
+      user,
+      invites,
+      signInWithGoogle,
+      signInWithEmail,
+      signUpWithEmail,
+      signOut: handleSignOut,
+      requestConnection: handleRequestConnection,
+      acceptInvite: handleAcceptInvite,
+      declineInvite: handleDeclineInvite,
+      supabaseReady,
+    }),
+    [
+      coupleId,
+      data,
+      handleAcceptInvite,
+      handleDeclineInvite,
+      handleRequestConnection,
+      handleSignOut,
+      invites,
+      loading,
+      refreshData,
+      setData,
+      signInWithGoogle,
+      signInWithEmail,
+      signUpWithEmail,
+      supabaseReady,
+      user,
+    ]
+  );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 export function useAppContext() {

@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 const SuggestDateIdeasInputSchema = z.object({
   userLocation: z
@@ -24,6 +25,7 @@ const SuggestDateIdeasInputSchema = z.object({
     .number()
     .int()
     .positive()
+    .optional()
     .optional()
     .describe('The maximum distance in miles the user is willing to travel.'),
 });
@@ -44,6 +46,9 @@ const prompt = ai.definePrompt({
   name: 'suggestDateIdeasPrompt',
   input: {schema: SuggestDateIdeasInputSchema},
   output: {schema: SuggestDateIdeasOutputSchema},
+  config: {
+    temperature: 0.7, // Add a bit more creativity
+  },
   prompt: `You are a date idea generator.  Given the user's location, their partner's location, and their mutual interests, suggest some date ideas. Consider the distance between them, and suggest both in-person and virtual date ideas.
 
 User Location: {{{userLocation}}}
@@ -63,7 +68,22 @@ const suggestDateIdeasFlow = ai.defineFlow(
     outputSchema: SuggestDateIdeasOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      throw new Error("Unauthorized: You must be logged in.");
+    }
+
+    try {
+      const {output} = await prompt(input);
+      return output!;
+    } catch (error) {
+      console.error("AI Genkit error:", error);
+      throw new Error("Failed to generate date ideas. Please try again.");
+    }
   }
 );

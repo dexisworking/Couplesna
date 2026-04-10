@@ -1,6 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
-
-type Location = {
+export type Location = {
   city: string;
   country: string;
   timezone: string;
@@ -10,54 +8,59 @@ type Location = {
   };
 };
 
-type UserDetails = {
+export type UserDetails = {
   anniversary: string;
   birthday: string;
   favoriteColor: string;
   favoriteSong: string;
 };
 
-export type User = {
-  name: string;
-  username: string;
-  profilePic: string;
-  location: Location;
-  details: UserDetails;
+export type UserMedia = {
+  app: string;
+  track: string;
 };
 
-export type Partner = {
+export type DashboardWeather = {
+  condition: string;
+  tempCelsius: number;
+  icon: 'Sunny' | 'Cloudy' | 'Windy' | 'Rainy' | 'Snowy';
+};
+
+export type DashboardPerson = {
+  id: string;
   name: string;
+  email?: string | null;
   username: string;
   profilePic: string;
   location: Location;
-  weather: {
-    condition: string;
-    tempCelsius: number;
-    icon: string;
-  };
-  media: {
-    app: string;
-    track: string;
-  };
   details: UserDetails;
+  media?: UserMedia | null;
+};
+
+export type User = DashboardPerson;
+
+export type Partner = DashboardPerson & {
+  weather: DashboardWeather | null;
 };
 
 export type GalleryImage = {
+  id?: string;
   url: string;
   hint: string;
+  storagePath?: string;
 };
 
 export type GalleryCategory = {
   id: string;
   title: string;
+  slug?: string;
   images: GalleryImage[];
 };
 
 export type DashboardData = {
   user: User;
   partner: Partner;
-  coupleId: string;
-  users?: string[];
+  coupleId: string | null;
   nextMeetDate: string;
   notes: {
     user: string;
@@ -65,4 +68,20 @@ export type DashboardData = {
   };
   distanceApartKm: number;
   gallery: GalleryCategory[];
+};
+
+export type ConnectionInvite = {
+  id: string;
+  direction: 'incoming' | 'outgoing';
+  otherProfileId: string;
+  otherName: string;
+  otherUsername: string;
+  otherAvatarUrl: string | null;
+  createdAt: string;
+};
+
+export type AppDataSnapshot = {
+  dashboard: DashboardData;
+  coupleId: string | null;
+  invites: ConnectionInvite[];
 };
