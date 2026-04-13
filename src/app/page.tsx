@@ -18,6 +18,7 @@ const creditsLinks = [
   { label: 'LinkedIn', href: 'https://www.linkedin.com/in/dibyanshusekhar/' },
   { label: 'Instagram', href: 'https://instagram.com/dexisreal' },
   { label: 'Coffee', href: 'https://buymeacoffee.com/dexisworking' },
+  { label: 'PORTFOLIO', href: 'https://iamdex.codes/' },
 ];
 
 const creditsOwner = '© 2026 Dibyanshu Sekhar';
@@ -75,19 +76,6 @@ export default function Home() {
              <GallerySection />
            </div>
 
-           <section className="widget lg:col-span-3 p-4 md:p-6">
-             <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-3">Credits</h2>
-             <p className="inline-flex items-center gap-2 text-xs text-white/70">
-               <Image
-                 src="/couplesna_favicon.png"
-                 alt="Couplesna favicon"
-                 width={16}
-                 height={16}
-                 className="h-[1em] w-[1em] rounded-sm"
-               />
-               {creditsOwner}
-             </p>
-           </section>
         </main>
 
         <footer className="mt-6 border-t border-white/10 pt-4">
