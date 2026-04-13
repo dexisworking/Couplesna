@@ -97,7 +97,11 @@ export default function Home() {
                   href={link.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="uppercase tracking-wide transition hover:text-white"
+                  className={`inline-flex items-center uppercase tracking-wide transition ${
+                    link.label === 'PORTFOLIO'
+                      ? 'rounded-full border border-white/25 px-2 py-1 text-white/90 hover:border-white/50 hover:text-white'
+                      : 'text-white/75 hover:text-white'
+                  }`}
                 >
                   {link.label}
                 </a>
