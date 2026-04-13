@@ -1,6 +1,7 @@
 
 'use client';
 import * as React from 'react';
+import Image from 'next/image';
 import Header from '@/components/header';
 import CountdownCard from '@/components/countdown-card';
 import NotesCard from '@/components/notes-card';
@@ -10,6 +11,16 @@ import DateIdeaGenerator from '@/components/date-idea-generator';
 import LocationMap from '@/components/location-map';
 import { useAppContext } from '@/context/app-context';
 import { Skeleton } from '@/components/ui/skeleton';
+
+const creditsLinks = [
+  { label: 'GitHub', href: 'https://github.com/dexisworking' },
+  { label: 'Twitter', href: 'https://x.com/SekharDibyanshu' },
+  { label: 'LinkedIn', href: 'https://www.linkedin.com/in/dibyanshusekhar/' },
+  { label: 'Instagram', href: 'https://instagram.com/dexisreal' },
+  { label: 'Coffee', href: 'https://buymeacoffee.com/dexisworking' },
+];
+
+const creditsOwner = '© 2026 Dibyanshu Sekhar';
 
 export default function Home() {
   const { data, loading, isSynced } = useAppContext();
@@ -62,8 +73,50 @@ export default function Home() {
           <div className="widget lg:col-span-3 p-4 md:p-6">
              <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-4 text-center">Our Moments</h2>
              <GallerySection />
-          </div>
+           </div>
+
+           <section className="widget lg:col-span-3 p-4 md:p-6">
+             <h2 className="text-lg md:text-xl font-semibold text-white/90 mb-3">Credits</h2>
+             <p className="inline-flex items-center gap-2 text-xs text-white/70">
+               <Image
+                 src="/couplesna_favicon.png"
+                 alt="Couplesna favicon"
+                 width={16}
+                 height={16}
+                 className="h-[1em] w-[1em] rounded-sm"
+               />
+               {creditsOwner}
+             </p>
+           </section>
         </main>
+
+        <footer className="mt-6 border-t border-white/10 pt-4">
+          <div className="flex flex-col gap-3 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between">
+            <span className="inline-flex items-center gap-2 text-xs">
+              <Image
+                src="/couplesna_favicon.png"
+                alt="Couplesna favicon"
+                width={16}
+                height={16}
+                className="h-[1em] w-[1em] rounded-sm"
+              />
+              {creditsOwner}
+            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              {creditsLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="uppercase tracking-wide transition hover:text-white"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
