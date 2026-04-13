@@ -14,7 +14,11 @@ const ptSans = PT_Sans({
 export const metadata: Metadata = {
   title: 'couplesna',
   description: 'Connecting long distance couples and making them feel closer.',
-  icons: null,
+  icons: {
+    icon: '/couplesna_favicon.png',
+    shortcut: '/couplesna_favicon.png',
+    apple: '/couplesna_favicon.png',
+  },
 };
 
 export default function RootLayout({
