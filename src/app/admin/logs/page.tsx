@@ -9,10 +9,11 @@ import {
   AlertTriangle,
   Zap,
   Map as MapIcon,
-  Search
+  Search,
+  Download
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { getAdminLogs } from '@/actions/admin';
+import { exportAdminLogsCsv, getAdminLogs } from '@/actions/admin';
 
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState<{
@@ -26,13 +27,31 @@ export default function AdminLogsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(25);
+  const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => {
     async function fetchLogs() {
+      setLoading(true);
       try {
-        const data = await getAdminLogs(filter);
-        setLogs(data);
+        const fromIso = fromDate ? new Date(`${fromDate}T00:00:00.000Z`).toISOString() : undefined;
+        const toIso = toDate ? new Date(`${toDate}T23:59:59.999Z`).toISOString() : undefined;
+        const data = await getAdminLogs({
+          filter,
+          page,
+          pageSize,
+          search: searchTerm,
+          from: fromIso,
+          to: toIso,
+        });
+        setLogs(data.records);
+        setTotal(data.total);
         setError(null);
       } catch (fetchError) {
         setError(fetchError instanceof Error ? fetchError.message : 'Failed to load logs.');
@@ -42,13 +61,29 @@ export default function AdminLogsPage() {
     }
 
     void fetchLogs();
-  }, [filter]);
+  }, [filter, fromDate, page, pageSize, searchTerm, toDate]);
 
-  const filteredLogs = logs.filter(log => 
-    log.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.event_type?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const downloadCsv = async () => {
+    try {
+      setIsExporting(true);
+      const fromIso = fromDate ? new Date(`${fromDate}T00:00:00.000Z`).toISOString() : undefined;
+      const toIso = toDate ? new Date(`${toDate}T23:59:59.999Z`).toISOString() : undefined;
+      const csv = await exportAdminLogsCsv({
+        filter,
+        search: searchTerm,
+        from: fromIso,
+        to: toIso,
+      });
+      const blob = new Blob([csv.content], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = csv.filename;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const eventTypes = [
     { value: 'all', label: 'All Activity' },
@@ -79,7 +114,7 @@ export default function AdminLogsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
           <h1 className="text-4xl font-heading text-gradient-purple">System Logs</h1>
-          <p className="text-white/40 font-serif">The immutable ledger of all cosmic shifts within Couponsna.</p>
+          <p className="text-white/40 font-serif">The immutable ledger of all cosmic shifts within Couplesna.</p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -99,20 +134,54 @@ export default function AdminLogsPage() {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="grid gap-4 md:grid-cols-4">
+        <div className="relative md:col-span-2">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-          <input 
+          <input
             type="text"
             placeholder="Search within logs..."
             className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm font-serif focus:ring-1 focus:ring-primary/40 outline-none transition-all"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setSearchTerm(e.target.value);
+            }}
           />
+        </div>
+        <input
+          type="date"
+          className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-white/80 outline-none focus:ring-1 focus:ring-primary/40"
+          value={fromDate}
+          onChange={(e) => {
+            setPage(1);
+            setFromDate(e.target.value);
+          }}
+        />
+        <input
+          type="date"
+          className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-white/80 outline-none focus:ring-1 focus:ring-primary/40"
+          value={toDate}
+          onChange={(e) => {
+            setPage(1);
+            setToDate(e.target.value);
+          }}
+        />
+      </div>
+
+      <div className="flex items-center justify-end">
+        <button
+          onClick={downloadCsv}
+          disabled={isExporting}
+          className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-[10px] uppercase tracking-widest text-white/70 hover:bg-white/[0.08] disabled:opacity-40"
+        >
+          <Download className="h-4 w-4" />
+          {isExporting ? 'Exporting...' : 'Export CSV'}
+        </button>
       </div>
 
       <div className="premium-blur rounded-[2.5rem] border-white/5 overflow-hidden">
         <div className="flex flex-col divide-y divide-white/[0.02]">
-            {filteredLogs.map((log) => (
+            {logs.map((log) => (
                <div key={log.id} className="p-8 hover:bg-white/[0.01] transition-all group flex flex-col md:flex-row gap-8">
                   <div className="w-40 shrink-0">
                      <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-heading mb-1">Timestamp</div>
@@ -135,7 +204,7 @@ export default function AdminLogsPage() {
                   <div className="flex-1">
                      <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-heading mb-1">Details</div>
                      <div className="text-sm font-serif text-white/80 leading-relaxed italic">
-                        &quot;{log.description}&quot;
+                        &quot;{log.description || 'No description'}&quot;
                      </div>
                      {log.profiles && (
                        <div className="mt-2 text-[10px] text-white/30 uppercase tracking-widest flex items-center gap-2">
@@ -159,7 +228,7 @@ export default function AdminLogsPage() {
             ))}
         </div>
         
-        {filteredLogs.length === 0 && (
+        {logs.length === 0 && (
            <div className="py-40 text-center flex flex-col items-center gap-4 opacity-20">
               <ScrollText className="w-12 h-12" />
               <div className="font-heading uppercase tracking-[0.3em] text-sm">No echoes found</div>
@@ -168,10 +237,24 @@ export default function AdminLogsPage() {
       </div>
 
       <div className="flex items-center justify-between px-4 pb-12">
-        <span className="text-xs text-white/20 font-serif">Showing latest {filteredLogs.length} events</span>
+        <span className="text-xs text-white/20 font-serif">
+          Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, total)} of {total} events
+        </span>
         <div className="flex gap-2">
-           <button className="p-2 rounded-lg bg-white/5 border border-white/5 text-white/20 cursor-not-allowed"><ChevronLeft className="w-5 h-5" /></button>
-           <button className="p-2 rounded-lg bg-white/5 border border-white/5 text-white/20 cursor-not-allowed"><ChevronRight className="w-5 h-5" /></button>
+           <button
+             onClick={() => setPage((p) => Math.max(1, p - 1))}
+             disabled={page <= 1 || loading}
+             className="p-2 rounded-lg bg-white/5 border border-white/5 text-white/60 disabled:opacity-20 disabled:cursor-not-allowed"
+           >
+             <ChevronLeft className="w-5 h-5" />
+           </button>
+           <button
+             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+             disabled={page >= totalPages || loading}
+             className="p-2 rounded-lg bg-white/5 border border-white/5 text-white/60 disabled:opacity-20 disabled:cursor-not-allowed"
+           >
+             <ChevronRight className="w-5 h-5" />
+           </button>
         </div>
       </div>
     </div>

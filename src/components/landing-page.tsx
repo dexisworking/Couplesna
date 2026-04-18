@@ -228,7 +228,7 @@ export default function LandingPage() {
         <div className="space-y-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/55">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
-            Crafted for long-distance couples
+            01 / Crafted for long-distance couples
           </div>
           <h1 className="font-heading text-5xl leading-[0.92] text-white md:text-7xl">
             A private home for your relationship.
@@ -237,6 +237,14 @@ export default function LandingPage() {
             Couplesna gives two people one shared digital space: synchronized countdowns, a soft pulse of partner
             presence, thoughtful AI date ideas, and a clean connection flow that stays personal.
           </p>
+          <div className="dex-panel p-4">
+            <p className="dex-kicker mb-3">Live Product Surface</p>
+            <div className="dex-mono space-y-1 text-sm text-white/70">
+              <p>dex@couplesna ~ secure-space</p>
+              <p>&gt; sync --partner --countdown --presence</p>
+              <p>&gt; status: connected</p>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-4">
             <Button
               size="lg"
@@ -256,8 +264,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 md:p-6">
-          <p className="text-[11px] uppercase tracking-[0.2em] text-white/45">Element Previews</p>
+        <div className="dex-panel space-y-4 p-4 md:p-6">
+          <p className="dex-kicker">02 / Element previews</p>
           <SyncCardPreview />
           <div className="grid gap-4 md:grid-cols-2">
             <CountdownPreview />
@@ -267,16 +275,16 @@ export default function LandingPage() {
       </section>
 
       <section className="mx-auto grid w-full max-w-6xl gap-5 border-y border-white/10 px-6 py-12 md:grid-cols-3 md:px-8">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-white/45">Connection Flow</p>
+        <div className="dex-panel p-5">
+          <p className="mb-2 dex-kicker">03 / Connection Flow</p>
           <p className="text-white/75">Invite, accept, and bond instantly with a dedicated couple identity.</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-white/45">AI Date Ideas</p>
+        <div className="dex-panel p-5">
+          <p className="mb-2 dex-kicker">04 / AI Date Ideas</p>
           <p className="text-white/75">Gemini-powered suggestions tuned to both locations and interests.</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <p className="mb-2 text-xs uppercase tracking-[0.2em] text-white/45">Private by Design</p>
+        <div className="dex-panel p-5">
+          <p className="mb-2 dex-kicker">05 / Private by Design</p>
           <p className="flex items-center gap-2 text-white/75">
             <LockKeyhole className="h-4 w-4 text-primary" />
             Session and storage controls built around pair-only access.

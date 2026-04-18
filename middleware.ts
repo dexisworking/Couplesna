@@ -10,18 +10,15 @@ export async function middleware(request: NextRequest) {
   }
 
   const refreshedResponse = await updateSession(request);
-  const host = request.headers.get('host') || '';
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const hostHeader = forwardedHost?.split(',')[0]?.trim() || request.headers.get('host') || '';
+  const host = hostHeader.toLowerCase().split(':')[0];
   const url = request.nextUrl.clone();
   const isAdminSubdomain = host.startsWith('coupleadmin.');
   const isAdminPath = url.pathname.startsWith('/admin');
+  const requiresAdminGate = isAdminSubdomain || isAdminPath;
 
-  // Route admin subdomain traffic into the /admin app namespace.
-  if (isAdminSubdomain && !isAdminPath) {
-    url.pathname = `/admin${url.pathname}`;
-    return NextResponse.rewrite(url);
-  }
-
-  if (!isAdminSubdomain && !isAdminPath) {
+  if (!requiresAdminGate) {
     return refreshedResponse;
   }
 
@@ -54,6 +51,12 @@ export async function middleware(request: NextRequest) {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
   if (profile?.role !== 'admin') {
     return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // After auth/role checks, route admin subdomain traffic into /admin namespace.
+  if (isAdminSubdomain && !isAdminPath) {
+    url.pathname = `/admin${url.pathname}`;
+    return NextResponse.rewrite(url);
   }
 
   return response;

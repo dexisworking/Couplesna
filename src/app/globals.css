@@ -74,3 +74,15 @@ body {
 .text-gradient-purple {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-[#D3D3FF] via-[#ED80E9] to-[#9400D3];
 }
+
+.dex-panel {
+    @apply rounded-[2rem] border border-white/10 bg-black/35 backdrop-blur-3xl;
+}
+
+.dex-kicker {
+    @apply text-[10px] uppercase tracking-[0.28em] text-white/45;
+}
+
+.dex-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
