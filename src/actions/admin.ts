@@ -1,7 +1,8 @@
 'use server';
 
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from '@/lib/admin-auth/session';
 
 type AdminUserRecord = {
   id: string;
@@ -37,20 +38,18 @@ function buildCsv(headers: string[], rows: Array<Array<unknown>>) {
 }
 
 async function assertAdmin() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+  const session = token ? verifyAdminSessionToken(token) : null;
+  if (!session) {
     throw new Error('Unauthorized');
   }
 
-  const { data: profile, error: profileError } = await supabase
+  const admin = createAdminSupabaseClient();
+  const { data: profile, error: profileError } = await admin
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', session.sub)
     .single();
 
   if (profileError || profile?.role !== 'admin') {

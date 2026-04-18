@@ -1,8 +1,49 @@
 import type { NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
-import { getPublicSupabaseEnv, isSupabaseConfigured } from '@/lib/supabase/env';
+import { isSupabaseConfigured } from '@/lib/supabase/env';
+
+const ADMIN_SESSION_COOKIE = 'couplesna_admin_session';
+
+const encoder = new TextEncoder();
+
+function fromBase64Url(input: string) {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function verifyEdgeAdminSession(token: string | undefined) {
+  if (!token) return null;
+  const [encoded, sig] = token.split('.');
+  if (!encoded || !sig) return null;
+
+  const secret = process.env.ADMIN_SESSION_SECRET || 'local-dev-admin-secret-change-me';
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+
+  const verified = await crypto.subtle.verify('HMAC', key, fromBase64Url(sig), encoder.encode(encoded));
+  if (!verified) return null;
+
+  try {
+    const payloadJson = new TextDecoder().decode(fromBase64Url(encoded));
+    const payload = JSON.parse(payloadJson) as { exp?: number; role?: string };
+    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000) || payload.role !== 'admin') {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -16,50 +57,54 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const isAdminSubdomain = host.startsWith('coupleadmin.');
   const isAdminPath = url.pathname.startsWith('/admin');
-  const requiresAdminGate = isAdminSubdomain || isAdminPath;
+  const isAdminAuthApi = url.pathname.startsWith('/api/admin-auth');
+  const isAdminLoginPath = url.pathname === '/admin/login';
+
+  if (url.pathname.startsWith('/_next') || url.pathname === '/favicon.ico') {
+    return refreshedResponse;
+  }
+  if (url.pathname.startsWith('/api') && !isAdminAuthApi) {
+    return refreshedResponse;
+  }
+
+  const requiresAdminGate = (isAdminSubdomain || isAdminPath) && !isAdminAuthApi;
 
   if (!requiresAdminGate) {
     return refreshedResponse;
   }
 
-  const { url: supabaseUrl, anonKey } = getPublicSupabaseEnv();
-  const response = refreshedResponse;
-  const supabase = createServerClient(supabaseUrl, anonKey, {
-    cookies: {
-      get(name: string) {
-        return request.cookies.get(name)?.value;
-      },
-      set(name: string, value: string, options: CookieOptions) {
-        request.cookies.set({ name, value, ...options });
-        response.cookies.set({ name, value, ...options });
-      },
-      remove(name: string, options: CookieOptions) {
-        request.cookies.set({ name, value: '', ...options });
-        response.cookies.set({ name, value: '', ...options });
-      },
-    },
-  });
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-  if (profile?.role !== 'admin') {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
+  const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const adminSession = await verifyEdgeAdminSession(token);
 
   // After auth/role checks, route admin subdomain traffic into /admin namespace.
   if (isAdminSubdomain && !isAdminPath) {
     url.pathname = `/admin${url.pathname}`;
-    return NextResponse.rewrite(url);
+    if (!adminSession && url.pathname !== '/admin/login') {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = '/admin/login';
+      return NextResponse.redirect(loginUrl);
+    }
+    if (adminSession && url.pathname === '/admin/login') {
+      const dashboardUrl = request.nextUrl.clone();
+      dashboardUrl.pathname = '/admin';
+      return NextResponse.redirect(dashboardUrl);
+    }
+    const rewriteResponse = NextResponse.rewrite(url);
+    refreshedResponse.cookies.getAll().forEach((cookie) => {
+      rewriteResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
+    return rewriteResponse;
   }
 
-  return response;
+  if (!adminSession && !isAdminLoginPath) {
+    return NextResponse.redirect(new URL('/admin/login', request.url));
+  }
+
+  if (adminSession && isAdminLoginPath) {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
+
+  return refreshedResponse;
 }
 
 export const config = {

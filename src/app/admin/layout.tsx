@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   BarChart3, 
   Users, 
@@ -11,17 +11,26 @@ import {
   ShieldCheck,
   Activity
 } from 'lucide-react';
-import { useAppContext } from '@/context/app-context';
 import { getClientProjectVersion } from '@/actions/version';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { signOut } = useAppContext();
+  const router = useRouter();
   const [version, setVersion] = React.useState('...');
+  const handleLogout = async () => {
+    await fetch('/api/admin-auth/logout', { method: 'POST' });
+    router.push('/admin/login');
+    router.refresh();
+  };
+
 
   React.useEffect(() => {
     getClientProjectVersion().then(setVersion);
   }, []);
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
 
   const navItems = [
     { label: 'Dashboard', icon: BarChart3, href: '/admin' },
@@ -77,7 +86,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div className="p-6 border-t border-white/5 space-y-4">
           <button
-            onClick={signOut}
+            onClick={handleLogout}
             className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-red-400/60 hover:text-red-400 hover:bg-red-400/5 transition-all"
           >
             <LogOut className="w-5 h-5" />

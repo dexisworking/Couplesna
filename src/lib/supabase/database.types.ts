@@ -168,6 +168,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      passkey_challenges: {
+        Row: {
+          id: string;
+          admin_user_id: string;
+          challenge: string;
+          type: 'registration' | 'authentication';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_user_id: string;
+          challenge: string;
+          type: 'registration' | 'authentication';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_user_id?: string;
+          challenge?: string;
+          type?: 'registration' | 'authentication';
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      passkey_credentials: {
+        Row: {
+          credential_id: string;
+          admin_user_id: string;
+          credential_public_key: string;
+          counter: number;
+          transports: string[];
+          created_at: string;
+        };
+        Insert: {
+          credential_id: string;
+          admin_user_id: string;
+          credential_public_key: string;
+          counter?: number;
+          transports?: string[];
+          created_at?: string;
+        };
+        Update: {
+          credential_id?: string;
+          admin_user_id?: string;
+          credential_public_key?: string;
+          counter?: number;
+          transports?: string[];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           id: string;
@@ -233,6 +284,30 @@ export type Database = {
           event_type?: string;
           description?: string | null;
           metadata?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      admin_otps: {
+        Row: {
+          id: string;
+          admin_id: string;
+          code: string;
+          expires_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_id: string;
+          code: string;
+          expires_at: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_id?: string;
+          code?: string;
+          expires_at?: string;
           created_at?: string;
         };
         Relationships: [];
