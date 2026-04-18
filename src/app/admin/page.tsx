@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { 
   Users, 
   Sparkles, 
@@ -23,7 +23,10 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: s
 );
 
 export default function AdminDashboard() {
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const [stats, setStats] = useState<{
     totalUsers: number;
     aiRequestsToday: number;

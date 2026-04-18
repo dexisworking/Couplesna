@@ -14,6 +14,7 @@ import { useAppContext } from '@/context/app-context';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { getClientProjectVersion } from '@/actions/version';
 
 // --- Boutique Element Previews ---
 
@@ -111,6 +112,12 @@ export default function LandingPage() {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, supabaseReady } = useAppContext();
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [version, setVersion] = React.useState('...');
+
+  React.useEffect(() => {
+    getClientProjectVersion().then(setVersion);
+  }, []);
+
   const [isLoginOpen, setIsLoginOpen] = React.useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -302,7 +309,7 @@ export default function LandingPage() {
            <Shield className="w-16 h-16 text-primary/40" />
            <h2 className="text-4xl md:text-6xl font-heading leading-tight">ENCRYPTED ATTACHMENT.</h2>
            <p className="font-serif text-lg text-secondary-foreground/50 leading-relaxed italic">
-             {&quot;Your shared moments are a sanctuary, not a statistic.&quot;}
+             {"Your shared moments are a sanctuary, not a statistic."}
            </p>
            <p className="font-serif text-base text-secondary-foreground/40 max-w-xl">
              We employ an isolated vault architecture. Your CoupleID is a unique primary key to which only your combined identities hold the decryption rights.
@@ -350,9 +357,10 @@ export default function LandingPage() {
              </div>
            </div>
 
-           <div className="text-[10px] items-end font-serif opacity-30">
-              © 2026 DIBYANSHU SEKHAR. ALL RIGHTS RESERVED.
-           </div>
+           <div className="text-[10px] items-end font-serif opacity-30 flex flex-col items-end gap-1">
+               <span>&copy; 2026 DIBYANSHU SEKHAR. ALL RIGHTS RESERVED.</span>
+               <span className="tracking-widest uppercase text-primary/50">{version}</span>
+            </div>
         </div>
       </footer>
      </div>

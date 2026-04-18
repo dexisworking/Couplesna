@@ -13,10 +13,16 @@ import {
   Activity
 } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
+import { getClientProjectVersion } from '@/actions/version';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { signOut } = useAppContext();
+  const [version, setVersion] = React.useState('...');
+
+  React.useEffect(() => {
+    getClientProjectVersion().then(setVersion);
+  }, []);
 
   const navItems = [
     { label: 'Dashboard', icon: BarChart3, href: '/admin' },
@@ -71,6 +77,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
              <LogOut className="w-5 h-5" />
              <span className="font-heading text-sm tracking-widest uppercase">Exit Control</span>
            </button>
+        </div>
+
+        <div className="mt-auto p-8 border-t border-white/5">
+           <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-white/20 font-heading">
+              <span>Project Sanctum</span>
+              <span className="text-primary/40">{version}</span>
+           </div>
         </div>
       </aside>
 

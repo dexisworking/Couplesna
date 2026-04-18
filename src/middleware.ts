@@ -1,38 +1,82 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  let res = NextResponse.next({
+    request: {
+      headers: req.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          req.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+          res = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          res.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: CookieOptions) {
+          req.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+          res = NextResponse.next({
+            request: {
+              headers: req.headers,
+            },
+          });
+          res.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
   const { data: { session } } = await supabase.auth.getSession();
 
   const url = req.nextUrl;
   const hostname = req.headers.get('host') || '';
 
   // 1. Handle Subdomain Routing for Admin
-  // Routes: coupleadmin.iamdex.codes -> internal /admin
   const isAdminSubdomain = hostname.startsWith('coupleadmin.');
   
   if (isAdminSubdomain) {
-    // If user is on the admin subdomain but not at /admin internally, rewrite it.
-    // NOTE: This assumes we have a /admin directory in src/app
     if (!url.pathname.startsWith('/admin')) {
         url.pathname = `/admin${url.pathname}`;
         return NextResponse.rewrite(url);
     }
   }
 
-  // 2. Protect Admin Routes (both rewritten and direct)
+  // 2. Protect Admin Routes
   if (url.pathname.startsWith('/admin')) {
     if (!session) {
-      // Not logged in -> redirect to login (landing page)
       const loginUrl = new URL('/', req.url);
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check for admin role
-    // We check the profile table for the current user's role
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -40,7 +84,6 @@ export async function middleware(req: NextRequest) {
       .single();
 
     if (profile?.role !== 'admin') {
-      // Not an admin -> redirect to home/dashboard
       const dashboardUrl = new URL('/', req.url);
       return NextResponse.redirect(dashboardUrl);
     }
@@ -51,13 +94,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

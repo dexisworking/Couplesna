@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { 
   Activity, 
   CheckCircle2, 
@@ -39,7 +39,10 @@ const HealthMetric = ({ label, status, detail, icon: Icon }: HealthMetricProps) 
 );
 
 export default function AdminHealthPage() {
-  const supabase = createClientComponentClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const [health, setHealth] = useState<Record<string, { status: string; message: string }>>({
     supabase: { status: 'loading', message: 'Checking...' },
     auth: { status: 'loading', message: 'Checking...' },
