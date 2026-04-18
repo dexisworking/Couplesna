@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Resend } from 'resend';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
+import { buildAdminOtpEmailTemplate } from '@/lib/email-templates';
 
 const schema = z.object({
   adminId: z.string().uuid(),
 });
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 function generateOTP(length = 6) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -47,16 +46,10 @@ export async function POST(req: NextRequest) {
     }
 
     const fromEmail = process.env.ADMIN_AUTH_FROM_EMAIL || 'Couplesna Admin <auth@iamdex.codes>';
-    const html = `
-      <div style="font-family:Arial,sans-serif;line-height:1.5">
-        <h2>Your Couplesna Admin Code</h2>
-        <p>Use the code below to continue your admin login:</p>
-        <p style="font-size:28px;font-weight:700;letter-spacing:6px">${otpCode}</p>
-        <p>This code expires in 10 minutes.</p>
-      </div>
-    `;
+    const html = buildAdminOtpEmailTemplate(otpCode);
 
     if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY);
       await resend.emails.send({
         from: fromEmail,
         to: adminUser.email,
