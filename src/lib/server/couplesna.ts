@@ -8,6 +8,7 @@ import { getWeatherForLocation } from '@/lib/providers/weather';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import type { Database, Json } from '@/lib/supabase/database.types';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { logEventServer } from '@/lib/logging-service';
 import type {
   AppDataSnapshot,
   ConnectionInvite,
@@ -420,6 +421,10 @@ export async function loadAppSnapshotForUser(user: AuthUser): Promise<AppDataSna
   const signedImageUrls = await getSignedImageUrls(admin, images || []);
   const partnerPerson = profileToPerson(partnerProfile);
   const weather = await getWeatherForLocation(partnerPerson.location);
+  
+  // Log map/location request
+  await logEventServer('map_request', `Loaded location data for partner of ${currentProfile.email}`, { partner_city: partnerPerson.location.city });
+
   const distanceApartKm =
     couple.distance_apart_km ?? calculateDistanceKm(currentPerson.location, partnerPerson.location);
 
@@ -602,6 +607,8 @@ export async function sendConnectionInvite(partnerIdentifier: string) {
     throw new Error(`Unable to send connection invite: ${error.message}`);
   }
 
+  await logEventServer('connection_request', `Invite sent from ${currentProfile.email} to ${partnerProfile.email}`);
+
   return { autoAccepted: false };
 }
 
@@ -681,6 +688,8 @@ export async function acceptConnectionInvite(inviteId: string) {
       `sender_profile_id.eq.${invite.sender_profile_id},receiver_profile_id.eq.${invite.sender_profile_id},sender_profile_id.eq.${invite.receiver_profile_id},receiver_profile_id.eq.${invite.receiver_profile_id}`
     )
     .eq('status', 'pending');
+
+  await logEventServer('connection_bond', `Couple bond formed between ${invite.sender_profile_id} and ${invite.receiver_profile_id}`, { couple_id: couple.id });
 }
 
 export async function declineConnectionInvite(inviteId: string) {

@@ -10,6 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { logEventServer } from '@/lib/logging-service';
 
 const SuggestDateIdeasInputSchema = z.object({
   userLocation: z
@@ -80,9 +81,20 @@ const suggestDateIdeasFlow = ai.defineFlow(
 
     try {
       const {output} = await prompt(input);
+      
+      // Log successful AI request
+      await logEventServer('ai_request', `Generated date ideas for ${user.email}`, { 
+        input, 
+        result_count: output?.dateIdeas?.length || 0 
+      });
+
       return output!;
     } catch (error) {
       console.error("AI Genkit error:", error);
+      
+      // Log AI error
+      await logEventServer('ai_error', `Failed to generate date ideas for ${user.email}`, { error: String(error) });
+      
       throw new Error("Failed to generate date ideas. Please try again.");
     }
   }

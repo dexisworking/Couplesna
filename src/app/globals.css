@@ -15,47 +15,41 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 98%;
-    --card: 240 6% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 6% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 346 89% 60%;
+    --background: 280 20% 4%;
+    --foreground: 280 20% 98%;
+    --card: 280 20% 7%;
+    --card-foreground: 280 20% 98%;
+    --popover: 280 20% 7%;
+    --popover-foreground: 280 20% 98%;
+    --primary: 282 100% 41%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 4% 20%;
+    --secondary: 280 15% 15%;
+    --secondary-foreground: 280 20% 98%;
+    --muted: 280 15% 12%;
+    --muted-foreground: 280 10% 65%;
+    --accent: 282 50% 30%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 18%;
-    --input: 240 4% 18%;
-    --ring: 346 89% 60%;
-    --radius: 1.5rem;
+    --border: 280 15% 20%;
+    --input: 280 15% 20%;
+    --ring: 282 100% 41%;
+    --radius: 2rem;
+
+    /* Wisteria Bloom Custom Palette */
+    --w-lavender: 240 100% 91%;
+    --w-deep-purple: 282 100% 41%;
+    --w-thistle: 300 24% 80%;
+    --w-orchid: 302 78% 71%;
   }
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 98%;
-    --card: 240 6% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 6% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 346 89% 60%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 4% 20%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 18%;
-    --input: 240 4% 18%;
-    --ring: 346 89% 60%;
+    --background: 280 20% 4%;
+    --foreground: 280 20% 98%;
+    --card: 280 20% 7%;
+    --card-foreground: 280 20% 98%;
+    --primary: 282 100% 41%;
+    --ring: 282 100% 41%;
+    --border: 280 15% 20%;
   }
 }
 
@@ -69,6 +63,14 @@ body {
 }
 
 .widget {
-    background-color: rgba(30, 30, 30, 0.5);
-    @apply backdrop-blur-2xl border border-white/10 rounded-2xl;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    @apply backdrop-blur-3xl border border-white/5 shadow-2xl transition-all duration-500;
+}
+
+.premium-blur {
+    @apply backdrop-blur-3xl bg-black/40 border border-white/10;
+}
+
+.text-gradient-purple {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#D3D3FF] via-[#ED80E9] to-[#9400D3];
 }

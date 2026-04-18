@@ -1,14 +1,19 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from '@/context/app-context';
-import { PT_Sans } from 'next/font/google';
+import { Cormorant_Garamond, Syne } from 'next/font/google';
 
-const ptSans = PT_Sans({
+const cormorantGaramond = Cormorant_Garamond({
   subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-pt-sans',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-serif',
+});
+
+const syne = Syne({
+  subsets: ['latin'],
+  weight: ['800'],
+  variable: '--font-heading',
 });
 
 export const metadata: Metadata = {
@@ -27,8 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${ptSans.variable} dark`} suppressHydrationWarning>
-      <body className="font-sans antialiased">
+    <html lang="en" className={`${cormorantGaramond.variable} ${syne.variable} dark`} suppressHydrationWarning>
+      <body className="font-serif antialiased selection:bg-primary/30">
         <AppProvider>
           {children}
           <Toaster />

@@ -8,6 +8,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/browser';
 import { isSupabaseConfigured } from '@/lib/supabase/env';
 import type { AppDataSnapshot, ConnectionInvite, DashboardData, DashboardPerson } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { logEventClient } from '@/lib/logging-service';
 
 type DashboardPatch = Partial<Pick<DashboardData, 'nextMeetDate' | 'notes' | 'distanceApartKm'>>;
 
@@ -251,8 +252,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+      await logEventClient('login_failed', `Failed login attempt for ${email}`, { error: error.message });
       throw error;
     }
+
+    await logEventClient('login_success', `User ${email} signed in`);
   }, [supabaseReady, toast]);
 
   const signUpWithEmail = React.useCallback(async (email: string, password: string) => {
@@ -275,8 +279,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
+      await logEventClient('signup_failed', `Failed signup for ${email}`, { error: error.message });
       throw error;
     }
+
+    await logEventClient('signup_attempt', `New signup attempt for ${email}`);
   }, [supabaseReady, toast]);
 
   const handleSignOut = React.useCallback(async () => {
@@ -289,9 +296,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
 
     const supabase = createBrowserSupabaseClient();
+    const userSnapshot = user;
     const { error } = await supabase.auth.signOut();
     if (error) {
+      await logEventClient('logout_error', `Error during logout for ${userSnapshot?.email}`, { error: error.message });
       throw error;
+    }
+
+    if (userSnapshot) {
+        await logEventClient('logout_success', `User ${userSnapshot.email} signed out`);
     }
 
     setUser(null);
