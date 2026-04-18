@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { 
   ScrollText, 
   ChevronLeft, 
@@ -13,49 +12,37 @@ import {
   Search
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getAdminLogs } from '@/actions/admin';
 
 export default function AdminLogsPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
   const [logs, setLogs] = useState<{
     id: string;
     created_at: string;
     event_type: string;
-    description: string;
+    description: string | null;
     metadata: Record<string, unknown> | null;
-    profiles: { email: string; username: string } | null;
+    profiles: { email: string | null; username: string | null } | null;
   }[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchLogs() {
-      let query = supabase
-        .from('system_logs')
-        .select(`
-          *,
-          profiles:user_id (email, username)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (filter !== 'all') {
-        if (filter === 'errors') {
-            query = query.like('event_type', '%error%');
-        } else {
-            query = query.eq('event_type', filter);
-        }
+      try {
+        const data = await getAdminLogs(filter);
+        setLogs(data);
+        setError(null);
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : 'Failed to load logs.');
+      } finally {
+        setLoading(false);
       }
-
-      const { data } = await query.limit(50);
-      if (data) setLogs(data);
-      setLoading(false);
     }
 
-    fetchLogs();
-  }, [supabase, filter]);
+    void fetchLogs();
+  }, [filter]);
 
   const filteredLogs = logs.filter(log => 
     log.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,6 +63,15 @@ export default function AdminLogsPage() {
        <div className="h-20 bg-white/5 rounded-2xl" />
        <div className="h-[600px] bg-white/5 rounded-[2.5rem]" />
     </div>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-100">
+        <h1 className="mb-2 text-2xl font-heading">Logs unavailable</h1>
+        <p className="text-sm text-red-200/80">{error}</p>
+      </div>
+    );
   }
 
   return (

@@ -9,7 +9,6 @@ import {
   ScrollText, 
   LogOut, 
   ShieldCheck,
-  Settings,
   Activity
 } from 'lucide-react';
 import { useAppContext } from '@/context/app-context';
@@ -63,13 +62,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         <div className="p-6 border-t border-white/5 space-y-4">
-           <Link 
-            href="/admin/settings"
-            className="flex items-center gap-4 px-6 py-4 rounded-2xl text-white/40 hover:text-white transition-all"
-           >
-             <Settings className="w-5 h-5" />
-             <span className="font-heading text-sm tracking-widest uppercase">Settings</span>
-           </Link>
            <button 
              onClick={signOut}
              className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-red-400/60 hover:text-red-400 hover:bg-red-400/5 transition-all"

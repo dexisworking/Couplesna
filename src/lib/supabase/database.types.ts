@@ -175,6 +175,7 @@ export type Database = {
           full_name: string | null;
           username: string | null;
           avatar_url: string | null;
+          role: 'user' | 'admin' | null;
           location: Json | null;
           details: Json | null;
           media: Json | null;
@@ -187,6 +188,7 @@ export type Database = {
           full_name?: string | null;
           username?: string | null;
           avatar_url?: string | null;
+          role?: 'user' | 'admin' | null;
           location?: Json | null;
           details?: Json | null;
           media?: Json | null;
@@ -199,6 +201,7 @@ export type Database = {
           full_name?: string | null;
           username?: string | null;
           avatar_url?: string | null;
+          role?: 'user' | 'admin' | null;
           location?: Json | null;
           details?: Json | null;
           media?: Json | null;
@@ -207,11 +210,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      system_logs: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          event_type: string;
+          description: string | null;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          event_type: string;
+          description?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          event_type?: string;
+          description?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
     Enums: {
       invite_status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+      user_role: 'user' | 'admin';
     };
     CompositeTypes: Record<string, never>;
   };

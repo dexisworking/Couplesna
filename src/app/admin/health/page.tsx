@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { 
   Activity, 
   CheckCircle2, 
@@ -11,6 +10,7 @@ import {
   Database as DbIcon,
   Globe
 } from 'lucide-react';
+import { getAdminHealth } from '@/actions/admin';
 
 interface HealthMetricProps {
   label: string;
@@ -39,36 +39,35 @@ const HealthMetric = ({ label, status, detail, icon: Icon }: HealthMetricProps) 
 );
 
 export default function AdminHealthPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
   const [health, setHealth] = useState<Record<string, { status: string; message: string }>>({
     supabase: { status: 'loading', message: 'Checking...' },
     auth: { status: 'loading', message: 'Checking...' },
     storage: { status: 'loading', message: 'Checking...' }
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkHealth() {
-      // 1. Supabase/DB Health
-      const { error: dbError } = await supabase.from('profiles').select('id').limit(1);
-      
-      // 2. Auth Health
-      const { data: { session }, error: authError } = await supabase.auth.getSession();
-
-      // 3. Storage Health
-      const { error: storageError } = await supabase.storage.from('gallery').list('', { limit: 1 });
-
-      setHealth({
-        supabase: { status: dbError ? 'error' : 'ok', message: dbError?.message || 'Database Responsive' },
-        auth: { status: authError ? 'error' : 'ok', message: session ? 'Active Admin Session' : 'No Active Session' },
-        storage: { status: storageError ? 'error' : 'ok', message: storageError?.message || 'Storage Bucket Reachable' }
-      });
+      try {
+        const result = await getAdminHealth();
+        setHealth(result);
+        setError(null);
+      } catch (healthError) {
+        setError(healthError instanceof Error ? healthError.message : 'Failed to run health checks.');
+      }
     }
 
-    checkHealth();
-  }, [supabase]);
+    void checkHealth();
+  }, []);
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-100">
+        <h1 className="mb-2 text-2xl font-heading">Health checks unavailable</h1>
+        <p className="text-sm text-red-200/80">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">

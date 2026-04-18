@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { 
   Users, 
   Sparkles, 
@@ -9,12 +8,19 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getAdminDashboardSnapshot } from '@/actions/admin';
+
+const statColorClasses: Record<string, string> = {
+  primary: 'bg-primary/10 text-primary',
+  orchid: 'bg-orchid/10 text-orchid',
+  lavender: 'bg-lavender/10 text-lavender',
+};
 
 const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ElementType; color: string }) => (
   <div className="premium-blur p-8 rounded-[2rem] border-white/5 space-y-4">
     <div className="flex items-center justify-between">
       <span className="text-xs uppercase tracking-[0.2em] text-white/40 font-heading">{title}</span>
-      <div className={`p-3 rounded-xl bg-${color}/10 text-${color}`}>
+      <div className={`p-3 rounded-xl ${statColorClasses[color] || statColorClasses.primary}`}>
         <Icon className="w-5 h-5" />
       </div>
     </div>
@@ -23,10 +29,6 @@ const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: s
 );
 
 export default function AdminDashboard() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
   const [stats, setStats] = useState<{
     totalUsers: number;
     aiRequestsToday: number;
@@ -35,8 +37,8 @@ export default function AdminDashboard() {
       id: string;
       event_type: string;
       created_at: string;
-      description: string;
-      profiles: { email: string } | null;
+      description: string | null;
+      profiles: { email: string | null } | null;
     }[];
   }>({
     totalUsers: 0,
@@ -45,52 +47,23 @@ export default function AdminDashboard() {
     recentLogs: []
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // 1. Total Users
-      const { count: usersCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // 2. AI Requests Today
-      const { count: aiCount } = await supabase
-        .from('system_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_type', 'ai_request')
-        .gte('created_at', today.toISOString());
-
-      // 3. Map Requests Today
-      const { count: mapCount } = await supabase
-        .from('system_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('event_type', 'map_request')
-        .gte('created_at', today.toISOString());
-
-      // 4. Recent Logs
-      const { data: logs } = await supabase
-        .from('system_logs')
-        .select(`
-          *,
-          profiles:user_id (email)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      setStats({
-        totalUsers: usersCount || 0,
-        aiRequestsToday: aiCount || 0,
-        mapRequestsToday: mapCount || 0,
-        recentLogs: logs || []
-      });
-      setLoading(false);
+      try {
+        const snapshot = await getAdminDashboardSnapshot();
+        setStats(snapshot);
+        setError(null);
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : 'Failed to load admin dashboard.');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetchStats();
-  }, [supabase]);
+    void fetchStats();
+  }, []);
 
   if (loading) {
     return <div className="animate-pulse space-y-8">
@@ -101,6 +74,15 @@ export default function AdminDashboard() {
          <div className="h-40 bg-white/5 rounded-[2rem]" />
       </div>
     </div>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-100">
+        <h1 className="mb-2 text-2xl font-heading">Admin dashboard unavailable</h1>
+        <p className="text-sm text-red-200/80">{error}</p>
+      </div>
+    );
   }
 
   return (

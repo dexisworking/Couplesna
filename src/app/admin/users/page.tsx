@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { createBrowserClient } from '@supabase/ssr';
 import { 
   Search, 
   User as UserIcon, 
@@ -13,6 +12,7 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { getAdminUsers } from '@/actions/admin';
 
 interface UserLocation {
   city?: string;
@@ -32,32 +32,26 @@ interface User {
 }
 
 export default function AdminUsersPage() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchUsers() {
-      const { data } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          couple_members (
-            couple_id
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (data) setUsers(data as User[]);
-      setLoading(false);
+      try {
+        const data = await getAdminUsers();
+        setUsers(data as User[]);
+        setError(null);
+      } catch (fetchError) {
+        setError(fetchError instanceof Error ? fetchError.message : 'Failed to load users.');
+      } finally {
+        setLoading(false);
+      }
     }
 
-    fetchUsers();
-  }, [supabase]);
+    void fetchUsers();
+  }, []);
 
   const filteredUsers = users.filter(user => 
     user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,6 +64,15 @@ export default function AdminUsersPage() {
         <div className="h-12 bg-white/5 rounded-xl w-64" />
         <div className="h-[600px] bg-white/5 rounded-[2.5rem]" />
      </div>;
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-8 text-red-100">
+        <h1 className="mb-2 text-2xl font-heading">User directory unavailable</h1>
+        <p className="text-sm text-red-200/80">{error}</p>
+      </div>
+    );
   }
 
   return (
