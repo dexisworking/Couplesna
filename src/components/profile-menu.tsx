@@ -6,11 +6,13 @@ import {
   Calendar,
   Check,
   Copy,
+  Edit3,
   Heart,
   Loader2,
   LogOut,
   MailPlus,
   Paintbrush,
+  Save,
   Star,
   User as UserIcon,
   Users,
@@ -32,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/app-context';
 import type { Partner, User } from '@/lib/types';
+import { updateProfile } from '@/actions/profile';
 
 const GoogleIcon = () => (
   <svg className="mr-2 h-4 w-4" viewBox="0 0 48 48">
@@ -87,6 +90,15 @@ export default function ProfileMenu({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  
+  // Edit Profile State
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editName, setEditName] = React.useState(currentUser.name);
+  const [editUsername, setEditUsername] = React.useState(currentUser.username);
+  const [editBirthday, setEditBirthday] = React.useState(currentUser.details?.birthday || '');
+  const [editAnniversary, setEditAnniversary] = React.useState(currentUser.details?.anniversary || '');
+  const [editFavoriteColor, setEditFavoriteColor] = React.useState(currentUser.details?.favoriteColor || '');
+  const [editFavoriteSong, setEditFavoriteSong] = React.useState(currentUser.details?.favoriteSong || '');
 
   const incomingInvites = invites.filter((invite) => invite.direction === 'incoming');
   const outgoingInvites = invites.filter((invite) => invite.direction === 'outgoing');
@@ -223,6 +235,35 @@ export default function ProfileMenu({
         title: 'Sign-up failed',
         description: error instanceof Error ? error.message : 'Unable to create account.',
       });
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    setIsSubmitting(true);
+    try {
+      await updateProfile({
+        fullName: editName,
+        username: editUsername,
+        details: {
+          birthday: editBirthday,
+          anniversary: editAnniversary,
+          favoriteColor: editFavoriteColor,
+          favoriteSong: editFavoriteSong,
+        },
+      });
+      toast({
+        title: 'Profile updated',
+        description: 'Your changes have been saved successfully.',
+      });
+      setIsEditing(false);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: error instanceof Error ? error.message : 'Please try again.',
+      });
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -460,7 +501,97 @@ export default function ProfileMenu({
                     <TabsTrigger value="partner-details">{partner.name}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="user-details" className="mt-4">
-                    {renderProfileDetails(currentUser)}
+                    <div className="flex justify-end mb-2">
+                       <Button 
+                         variant="outline" 
+                         size="sm" 
+                         onClick={() => setIsEditing(!isEditing)}
+                         disabled={isSubmitting}
+                       >
+                         {isEditing ? (
+                           <>
+                             <X className="mr-2 h-4 w-4" /> Cancel
+                           </>
+                         ) : (
+                           <>
+                             <Edit3 className="mr-2 h-4 w-4" /> Edit Profile
+                           </>
+                         )}
+                       </Button>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-4 rounded-lg bg-muted/50 p-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-name">Display Name</Label>
+                          <Input 
+                            id="edit-name" 
+                            value={editName} 
+                            onChange={(e) => setEditName(e.target.value)} 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-username">Username</Label>
+                          <Input 
+                            id="edit-username" 
+                            value={editUsername} 
+                            onChange={(e) => setEditUsername(e.target.value)} 
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-birthday">Birthday</Label>
+                            <Input 
+                              id="edit-birthday" 
+                              type="date" 
+                              value={editBirthday} 
+                              onChange={(e) => setEditBirthday(e.target.value)} 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="edit-anniversary">Anniversary</Label>
+                            <Input 
+                              id="edit-anniversary" 
+                              type="date" 
+                              value={editAnniversary} 
+                              onChange={(e) => setEditAnniversary(e.target.value)} 
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-color">Favorite Color</Label>
+                          <Input 
+                            id="edit-color" 
+                            placeholder="e.g. Emerald Green" 
+                            value={editFavoriteColor} 
+                            onChange={(e) => setEditFavoriteColor(e.target.value)} 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-song">Favorite Song</Label>
+                          <Input 
+                            id="edit-song" 
+                            placeholder="Song name - Artist" 
+                            value={editFavoriteSong} 
+                            onChange={(e) => setEditFavoriteSong(e.target.value)} 
+                          />
+                        </div>
+                        <Button 
+                          className="w-full" 
+                          onClick={handleUpdateProfile} 
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="mr-2 h-4 w-4" />
+                          )}
+                          Save Changes
+                        </Button>
+                      </div>
+                    ) : (
+                      renderProfileDetails(currentUser)
+                    )}
                   </TabsContent>
                   <TabsContent value="partner-details" className="mt-4">
                     {renderProfileDetails(partner)}

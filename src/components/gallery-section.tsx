@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Loader2, Trash2, Upload, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Lock, Trash2, Upload, X } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { GalleryCategory } from '@/lib/types';
@@ -61,12 +61,18 @@ export default function GallerySection() {
     [activeCategoryId, gallery]
   );
 
+  const isLocked = true; // Feature locked as requested
+
   const currentImage = activeCategory?.images[currentImageIndex];
 
-  const openModal = (category: GalleryCategory) => {
-    setActiveCategoryId(category.id);
-    setCurrentImageIndex(0);
-    setIsModalOpen(true);
+  const openModal = () => {
+    if (isLocked) {
+      toast({
+        title: 'Feature Locked',
+        description: 'Shared Gallery is coming soon to Couplesna.',
+      });
+      return;
+    }
   };
 
   const closeModal = () => {
@@ -169,10 +175,24 @@ export default function GallerySection() {
           ? 'Open an album to upload or remove photos.'
           : 'Connect with your partner to unlock persistent photo uploads.'}
       </div>
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4">
-        {gallery.map((category) => (
-          <AlbumTile key={category.id} category={category} onClick={() => openModal(category)} />
-        ))}
+      <div className="relative">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4 overflow-hidden rounded-xl">
+          {gallery.map((category) => (
+            <AlbumTile key={category.id} category={category} onClick={() => openModal()} />
+          ))}
+        </div>
+
+        {isLocked && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-black/60 backdrop-blur-[2px] border border-white/5 space-y-3">
+             <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                <Lock className="w-6 h-6 text-primary" />
+             </div>
+             <div className="text-center">
+                <p className="text-lg font-bold text-white tracking-tight">Shared Vaults</p>
+                <p className="text-sm text-white/60">Coming Soon</p>
+             </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && activeCategory && (

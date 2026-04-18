@@ -21,6 +21,7 @@ interface AppContextType {
   user: SupabaseUser | null;
   invites: ConnectionInvite[];
   signInWithGoogle: () => Promise<void>;
+  signInWithApple: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -213,6 +214,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabaseReady, toast]);
 
+  const signInWithApple = React.useCallback(async () => {
+    if (!supabaseReady) {
+      toast({
+        variant: 'destructive',
+        title: 'Supabase not configured',
+        description: 'Add your Supabase environment variables to enable Apple sign-in.',
+      });
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+  }, [supabaseReady, toast]);
+
   const signInWithEmail = React.useCallback(async (email: string, password: string) => {
     if (!supabaseReady) {
       toast({
@@ -312,6 +336,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       user,
       invites,
       signInWithGoogle,
+      signInWithApple,
       signInWithEmail,
       signUpWithEmail,
       signOut: handleSignOut,
@@ -332,6 +357,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       refreshData,
       setData,
       signInWithGoogle,
+      signInWithApple,
       signInWithEmail,
       signUpWithEmail,
       supabaseReady,
