@@ -3,7 +3,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 /**
  * Server-side logger
  */
-export async function logEventServer(eventType: string, description?: string, metadata: any = {}) {
+export async function logEventServer(eventType: string, description?: string, metadata: Record<string, unknown> = {}) {
     try {
         const supabase = await createServerSupabaseClient();
         const { error } = await supabase.rpc('log_system_event', {

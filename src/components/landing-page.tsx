@@ -2,16 +2,12 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Heart, 
   MapPin, 
-  Sparkles, 
-  ArrowRight, 
   Navigation,
   Timer,
-  Shield,
-  Zap
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/context/app-context';
@@ -80,7 +76,15 @@ const MapSlicePreview = () => (
   </div>
 );
 
-const FeatureSection = ({ title, subtitle, description, preview: Preview, reverse = false }: any) => (
+interface FeatureSectionProps {
+  title: string;
+  subtitle: string;
+  description: string;
+  preview: React.ComponentType;
+  reverse?: boolean;
+}
+
+const FeatureSection = ({ title, subtitle, description, preview: Preview, reverse = false }: FeatureSectionProps) => (
   <div className={`flex flex-col ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-16 py-24 px-6`}>
     <div className="flex-1 space-y-6">
       <div className="space-y-1">
@@ -232,7 +236,7 @@ export default function LandingPage() {
                 transition={{ duration: 1, delay: 0.5 }}
                 className="text-xl md:text-2xl text-secondary-foreground/50 max-w-2xl font-serif leading-relaxed"
               >
-                An Artisanal shared dashboard for the soulmate's journey. Experience synchronicity through an intimate digital architecture designed to bridge the void.
+                An Artisanal shared dashboard for the soulmate&apos;s journey. Experience synchronicity through an intimate digital architecture designed to bridge the void.
               </motion.p>
             </div>
 
@@ -298,7 +302,7 @@ export default function LandingPage() {
            <Shield className="w-16 h-16 text-primary/40" />
            <h2 className="text-4xl md:text-6xl font-heading leading-tight">ENCRYPTED ATTACHMENT.</h2>
            <p className="font-serif text-lg text-secondary-foreground/50 leading-relaxed italic">
-             "Your shared moments are a sanctuary, not a statistic."
+             {&quot;Your shared moments are a sanctuary, not a statistic.&quot;}
            </p>
            <p className="font-serif text-base text-secondary-foreground/40 max-w-xl">
              We employ an isolated vault architecture. Your CoupleID is a unique primary key to which only your combined identities hold the decryption rights.

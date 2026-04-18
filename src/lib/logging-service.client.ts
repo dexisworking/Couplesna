@@ -3,7 +3,7 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 /**
  * Client-side logger
  */
-export async function logEventClient(eventType: string, description?: string, metadata: any = {}) {
+export async function logEventClient(eventType: string, description?: string, metadata: Record<string, unknown> = {}) {
     const supabase = createClientComponentClient();
     try {
         const { error } = await supabase.rpc('log_system_event', {

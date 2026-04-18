@@ -1,28 +1,40 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { 
   Search, 
   User as UserIcon, 
   Mail, 
   MapPin, 
-  Calendar,
   MoreVertical,
   Link as LinkIcon,
   ShieldCheck
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface User {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  role: string | null;
+  created_at: string;
+  location: any;
+  couple_members: { couple_id: string }[];
+}
+
 export default function AdminUsersPage() {
   const supabase = createClientComponentClient();
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     async function fetchUsers() {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select(`
           *,
@@ -32,7 +44,7 @@ export default function AdminUsersPage() {
         `)
         .order('created_at', { ascending: false });
 
-      if (data) setUsers(data);
+      if (data) setUsers(data as User[]);
       setLoading(false);
     }
 
@@ -90,7 +102,7 @@ export default function AdminUsersPage() {
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
                       {user.avatar_url ? (
-                        <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                        <Image src={user.avatar_url} alt="" width={40} height={40} className="w-full h-full object-cover" unoptimized />
                       ) : (
                         <UserIcon className="w-5 h-5 text-primary/40" />
                       )}

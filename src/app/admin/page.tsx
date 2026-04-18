@@ -6,13 +6,11 @@ import {
   Users, 
   Sparkles, 
   Map as MapIcon, 
-  AlertCircle,
-  TrendingUp,
-  Clock
+  TrendingUp
 } from 'lucide-react';
 import { format } from 'date-fns';
 
-const StatCard = ({ title, value, icon: Icon, color }: any) => (
+const StatCard = ({ title, value, icon: Icon, color }: { title: string; value: string | number; icon: React.ElementType; color: string }) => (
   <div className="premium-blur p-8 rounded-[2rem] border-white/5 space-y-4">
     <div className="flex items-center justify-between">
       <span className="text-xs uppercase tracking-[0.2em] text-white/40 font-heading">{title}</span>
@@ -26,11 +24,22 @@ const StatCard = ({ title, value, icon: Icon, color }: any) => (
 
 export default function AdminDashboard() {
   const supabase = createClientComponentClient();
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<{
+    totalUsers: number;
+    aiRequestsToday: number;
+    mapRequestsToday: number;
+    recentLogs: {
+      id: string;
+      event_type: string;
+      created_at: string;
+      description: string;
+      profiles: { email: string } | null;
+    }[];
+  }>({
     totalUsers: 0,
     aiRequestsToday: 0,
     mapRequestsToday: 0,
-    recentLogs: [] as any[]
+    recentLogs: []
   });
   const [loading, setLoading] = useState(true);
 

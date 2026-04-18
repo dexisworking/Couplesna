@@ -311,7 +311,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setDashboard(buildFallbackDashboard());
     setCoupleId(null);
     setInvites([]);
-  }, [supabaseReady]);
+  }, [supabaseReady, user]);
 
   const handleRequestConnection = React.useCallback(
     async (partnerIdentifier: string) => {

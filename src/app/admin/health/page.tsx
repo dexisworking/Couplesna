@@ -12,7 +12,14 @@ import {
   Globe
 } from 'lucide-react';
 
-const HealthMetric = ({ label, status, detail, icon: Icon }: any) => (
+interface HealthMetricProps {
+  label: string;
+  status: string;
+  detail: string;
+  icon: React.ElementType;
+}
+
+const HealthMetric = ({ label, status, detail, icon: Icon }: HealthMetricProps) => (
   <div className="premium-blur p-8 rounded-[2rem] border-white/5 flex items-center justify-between group">
      <div className="flex items-center gap-6">
         <div className={`p-4 rounded-2xl ${status === 'ok' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
@@ -33,7 +40,7 @@ const HealthMetric = ({ label, status, detail, icon: Icon }: any) => (
 
 export default function AdminHealthPage() {
   const supabase = createClientComponentClient();
-  const [health, setHealth] = useState<any>({
+  const [health, setHealth] = useState<Record<string, { status: string; message: string }>>({
     supabase: { status: 'loading', message: 'Checking...' },
     auth: { status: 'loading', message: 'Checking...' },
     storage: { status: 'loading', message: 'Checking...' }
@@ -100,7 +107,7 @@ export default function AdminHealthPage() {
             <span className="font-heading tracking-[0.2em] uppercase text-sm">Real-time pulse</span>
          </div>
          <p className="font-serif text-white/40 leading-relaxed italic">
-            "The architecture remains stable as long as the connection endures. We monitor all vital signs of the bond to ensure zero interruptions in the sanctuary."
+            &quot;The architecture remains stable as long as the connection endures. We monitor all vital signs of the bond to ensure zero interruptions in the sanctuary.&quot;
          </p>
       </div>
     </div>

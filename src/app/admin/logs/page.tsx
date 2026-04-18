@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { 
   ScrollText, 
-  Filter, 
   ChevronLeft, 
   ChevronRight,
   Info,
@@ -17,7 +16,14 @@ import { format } from 'date-fns';
 
 export default function AdminLogsPage() {
   const supabase = createClientComponentClient();
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<{
+    id: string;
+    created_at: string;
+    event_type: string;
+    description: string;
+    metadata: any;
+    profiles: { email: string; username: string } | null;
+  }[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -130,7 +136,7 @@ export default function AdminLogsPage() {
                   <div className="flex-1">
                      <div className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-heading mb-1">Details</div>
                      <div className="text-sm font-serif text-white/80 leading-relaxed italic">
-                        "{log.description}"
+                        &quot;{log.description}&quot;
                      </div>
                      {log.profiles && (
                        <div className="mt-2 text-[10px] text-white/30 uppercase tracking-widest flex items-center gap-2">
