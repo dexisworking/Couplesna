@@ -10,6 +10,7 @@ export async function logEventServer(eventType: string, description?: string, me
             p_event_type: eventType,
             p_description: description,
             p_metadata: metadata
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any);
         if (error) console.error('Failed to log server event:', error);
     } catch (err) {

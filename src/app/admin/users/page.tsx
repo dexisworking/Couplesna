@@ -14,6 +14,11 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+interface UserLocation {
+  city?: string;
+  country?: string;
+}
+
 interface User {
   id: string;
   email: string | null;
@@ -22,7 +27,7 @@ interface User {
   avatar_url: string | null;
   role: string | null;
   created_at: string;
-  location: any;
+  location: UserLocation | null;
   couple_members: { couple_id: string }[];
 }
 

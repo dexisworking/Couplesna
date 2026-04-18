@@ -24,7 +24,7 @@ export default function AdminLogsPage() {
     created_at: string;
     event_type: string;
     description: string;
-    metadata: any;
+    metadata: Record<string, unknown> | null;
     profiles: { email: string; username: string } | null;
   }[]>([]);
   const [loading, setLoading] = useState(true);
