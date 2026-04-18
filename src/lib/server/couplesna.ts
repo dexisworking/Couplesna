@@ -8,7 +8,7 @@ import { getWeatherForLocation } from '@/lib/providers/weather';
 import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import type { Database, Json } from '@/lib/supabase/database.types';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { logEventServer } from '@/lib/logging-service';
+import { logEventServer } from '@/lib/logging-service.server';
 import type {
   AppDataSnapshot,
   ConnectionInvite,

@@ -8,7 +8,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase/browser';
 import { isSupabaseConfigured } from '@/lib/supabase/env';
 import type { AppDataSnapshot, ConnectionInvite, DashboardData, DashboardPerson } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { logEventClient } from '@/lib/logging-service';
+import { logEventClient } from '@/lib/logging-service.client';
 
 type DashboardPatch = Partial<Pick<DashboardData, 'nextMeetDate' | 'notes' | 'distanceApartKm'>>;
 

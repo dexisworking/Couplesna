@@ -10,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { logEventServer } from '@/lib/logging-service';
+import { logEventServer } from '@/lib/logging-service.server';
 
 const SuggestDateIdeasInputSchema = z.object({
   userLocation: z
