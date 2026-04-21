@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Clock3, LockKeyhole, MapPinned, Sparkles } from 'lucide-react';
+import { Clock3, MapPinned, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '@/context/app-context';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
@@ -103,205 +103,278 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#0a0a0e] text-foreground">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(148,106,170,0.18),transparent_45%),radial-gradient(circle_at_85%_80%,rgba(166,119,180,0.16),transparent_45%)]" />
+    <div className="min-h-screen overflow-x-hidden bg-[#07070a] text-foreground selection:bg-primary/20">
+      {/* Premium Background Ethereal Glows */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-[10%] -top-[10%] h-[600px] w-[600px] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute -right-[5%] top-[20%] h-[500px] w-[500px] rounded-full bg-orchid/5 blur-[100px]" />
+        <div className="absolute bottom-[10%] left-[20%] h-[400px] w-[400px] rounded-full bg-lavender/5 blur-[80px]" />
+      </div>
 
-      <div className="pointer-events-none fixed inset-0 opacity-[0.02] [background-image:linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] [background-size:48px_48px]" />
+      {/* Boutique Texture Overlay */}
+      <div className="pointer-events-none fixed inset-0 opacity-[0.03] [background-image:url('https://www.transparenttextures.com/patterns/pinstriped-suit.png')]" />
 
-      <nav className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8 md:px-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5">
-            <Image src="/couplesna_favicon.png" alt="Couplesna" width={20} height={20} />
+      <nav className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-10 md:px-12">
+        <div className="group flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5 transition-all duration-500 group-hover:rotate-12 group-hover:scale-110 group-hover:border-primary/40">
+            <Image src="/couplesna_favicon.png" alt="Couplesna" width={24} height={24} />
           </div>
           <div>
-            <p className="font-heading text-xl text-white">Couplesna</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/45">Shared Identity</p>
+            <p className="font-heading text-2xl tracking-tight text-white">Couplesna</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/40">Shared Identity</p>
           </div>
         </div>
 
         <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <DialogTrigger asChild>
-              <button className="text-xs uppercase tracking-[0.25em] text-white/65 transition hover:text-white">
-                Sign In
+              <button className="text-xs font-semibold uppercase tracking-[0.3em] text-white/50 transition-colors hover:text-white">
+                Access
               </button>
             </DialogTrigger>
             <Button
-              className="h-11 rounded-full border border-white/20 bg-white/10 px-7 text-xs uppercase tracking-[0.18em] text-white hover:bg-white/20"
+              className="h-12 rounded-2xl border border-white/10 bg-white/5 px-8 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-xl transition-all hover:bg-white/10 hover:shadow-primary/20"
               onClick={() => setIsLoginOpen(true)}
             >
-              Start
+              Initialize
             </Button>
           </div>
 
-          <DialogContent className="sm:max-w-[430px] border-white/10 bg-[#0c0c11] text-white">
-            <DialogHeader>
-              <DialogTitle className="font-heading text-3xl">Welcome Back</DialogTitle>
-              <DialogDescription className="font-serif text-base text-white/55">
-                Sign in to your private space and continue your shared timeline.
-              </DialogDescription>
-            </DialogHeader>
+          <DialogContent className="border-white/5 bg-[#0c0c11]/95 p-0 backdrop-blur-2xl sm:max-w-[440px]">
+            <div className="p-8">
+              <DialogHeader className="mb-8">
+                <DialogTitle className="font-heading text-4xl">The Sanctuary</DialogTitle>
+                <DialogDescription className="pt-2 font-serif text-lg italic text-white/40">
+                  Step into your private shared timeline.
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="space-y-5 py-5">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs uppercase tracking-[0.18em] text-white/55">
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="h-11 border-white/15 bg-white/[0.03]"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs uppercase tracking-[0.18em] text-white/55">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  className="h-11 border-white/15 bg-white/[0.03]"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-3">
-                <Button
-                  className="h-11 rounded-xl bg-primary font-heading uppercase tracking-[0.15em] hover:bg-primary/85"
-                  onClick={async () => {
-                    try {
-                      await signInWithEmail(email, password);
-                    } catch (error) {
-                      handleAuthError(error);
-                    }
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="h-11 rounded-xl text-white/70 hover:text-white"
-                  onClick={async () => {
-                    try {
-                      await signUpWithEmail(email, password);
-                      toast({
-                        title: 'Check your inbox',
-                        description: 'Your signup was received. Verify email if required.',
-                      });
-                    } catch (error) {
-                      handleAuthError(error);
-                    }
-                  }}
-                >
-                  Create account
-                </Button>
-              </div>
-              <div className="relative py-1">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/10" />
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+                    Coordinate (Email)
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@sanctuary.com"
+                    className="h-12 border-white/10 bg-white/[0.02] transition-all focus:border-primary/50"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-[#0c0c11] px-3 text-[10px] uppercase tracking-[0.25em] text-white/40">
-                    Or continue with
-                  </span>
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-[10px] uppercase tracking-[0.25em] text-white/40">
+                    Cypher (Password)
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="h-12 border-white/10 bg-white/[0.02] transition-all focus:border-primary/50"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
                 </div>
+                <div className="grid gap-3 pt-2">
+                  <Button
+                    className="h-12 rounded-xl bg-primary text-xs font-bold uppercase tracking-[0.2em] transition-all hover:bg-primary/80"
+                    onClick={async () => {
+                      try {
+                        await signInWithEmail(email, password);
+                      } catch (error) {
+                        handleAuthError(error);
+                      }
+                    }}
+                  >
+                    Authenticate
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="h-12 rounded-xl text-xs uppercase tracking-[0.15em] text-white/40 hover:text-white"
+                    onClick={async () => {
+                      try {
+                        await signUpWithEmail(email, password);
+                        toast({
+                          title: 'Invitation Pending',
+                          description: 'Check your inbox to verify your sanctuary access.',
+                        });
+                      } catch (error) {
+                        handleAuthError(error);
+                      }
+                    }}
+                  >
+                    Request Entry
+                  </Button>
+                </div>
+                
+                <div className="relative py-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-white/5" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-[#0c0c11] px-4 text-[9px] uppercase tracking-[0.3em] text-white/20">
+                      Alternate Channels
+                    </span>
+                  </div>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  className="h-14 w-full rounded-2xl border-white/10 bg-white/[0.02] text-xs uppercase tracking-[0.15em] transition-all hover:bg-white/[0.05]"
+                  onClick={handleGoogleSignIn}
+                  disabled={!supabaseReady}
+                >
+                  <Image src="https://www.google.com/favicon.ico" alt="Google" width={18} height={18} className="mr-3 opacity-70" />
+                  Google Gateway
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                className="h-12 rounded-xl border-white/15 bg-white/[0.02] hover:bg-white/[0.05]"
-                onClick={handleGoogleSignIn}
-                disabled={!supabaseReady}
-              >
-                <Image src="https://www.google.com/favicon.ico" alt="Google" width={16} height={16} className="mr-2" />
-                Google
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </nav>
 
-      <section className="relative mx-auto grid w-full max-w-6xl gap-14 px-6 pb-16 pt-12 md:grid-cols-2 md:px-8 md:pt-20">
-        <div className="space-y-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-[10px] uppercase tracking-[0.22em] text-white/55">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            01 / Crafted for long-distance couples
+      <main className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-16 md:px-12 md:pt-28">
+        <div className="grid gap-16 md:grid-cols-[1.2fr,0.8fr]">
+          <div className="flex flex-col justify-center space-y-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] py-2 pl-2 pr-5 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/50"
+            >
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-primary">
+                <Sparkles className="h-3 w-3" />
+              </span>
+              Handcrafted for distant hearts
+            </motion.div>
+            
+            <motion.h1 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="font-serif text-6xl leading-[1.05] tracking-tight text-white md:text-8xl"
+            >
+              A digital <span className="italic text-primary/80">sanctuary</span> for two.
+            </motion.h1>
+            
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.4 }}
+              className="max-w-xl font-serif text-xl leading-relaxed text-white/50 md:text-2xl"
+            >
+              Couplesna is an artisanal shared space where distance dissolves into a single, elegant timeline of countdowns, presence, and memories.
+            </motion.p>
+            
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="flex flex-wrap gap-6 pt-4"
+            >
+              <Button
+                size="lg"
+                className="h-14 rounded-2xl bg-primary px-10 text-xs font-bold uppercase tracking-[0.25em] shadow-2xl transition-all hover:scale-105 hover:bg-primary/90 hover:shadow-primary/40"
+                onClick={() => setIsLoginOpen(true)}
+              >
+                Create Sanctuary
+              </Button>
+              <button
+                className="group flex items-center gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/40 transition-colors hover:text-white"
+                onClick={() => setIsLoginOpen(true)}
+              >
+                Sign In 
+                <span className="h-[1px] w-8 bg-white/20 transition-all group-hover:w-12 group-hover:bg-primary" />
+              </button>
+            </motion.div>
           </div>
-          <h1 className="font-heading text-5xl leading-[0.92] text-white md:text-7xl">
-            A private home for your relationship.
-          </h1>
-          <p className="max-w-xl text-lg leading-relaxed text-white/60">
-            Couplesna gives two people one shared digital space: synchronized countdowns, a soft pulse of partner
-            presence, thoughtful AI date ideas, and a clean connection flow that stays personal.
-          </p>
-          <div className="dex-panel p-4">
-            <p className="dex-kicker mb-3">Live Product Surface</p>
-            <div className="dex-mono space-y-1 text-sm text-white/70">
-              <p>dex@couplesna ~ secure-space</p>
-              <p>&gt; sync --partner --countdown --presence</p>
-              <p>&gt; status: connected</p>
+
+          <div className="relative">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ duration: 1, delay: 0.3 }}
+              className="relative z-10 flex flex-col gap-6"
+            >
+              <div className="translate-x-4 md:translate-x-8">
+                <SyncCardPreview />
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="-translate-y-4">
+                   <CountdownPreview />
+                </div>
+                <div className="translate-y-4">
+                   <LocationPreview />
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Artistic Asymmetric Element */}
+            <div className="absolute -bottom-10 -right-10 h-64 w-64 rounded-full border border-white/5 bg-gradient-to-br from-primary/5 to-transparent blur-3xl" />
+          </div>
+        </div>
+      </main>
+
+      <section className="relative z-10 mx-auto max-w-7xl px-6 py-24 md:px-12">
+         <div className="mb-16 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+            <div className="space-y-4">
+              <p className="dex-kicker">03 / The Experience</p>
+              <h2 className="font-serif text-4xl text-white md:text-5xl">Designed for connection.</h2>
             </div>
-          </div>
-          <div className="flex flex-wrap gap-4">
-            <Button
-              size="lg"
-              className="h-12 rounded-full bg-primary px-7 font-heading uppercase tracking-[0.15em] hover:bg-primary/90"
-              onClick={() => setIsLoginOpen(true)}
-            >
-              Create Your Space
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 rounded-full border-white/20 bg-white/[0.03] px-7 uppercase tracking-[0.15em] text-white/80 hover:bg-white/[0.08]"
-              onClick={() => setIsLoginOpen(true)}
-            >
-              Sign In
-            </Button>
-          </div>
-        </div>
+            <p className="max-w-xs font-serif text-lg italic text-white/30">
+              &quot;We believe that private spaces should feel as warm as a handwritten letter, even in a digital world.&quot;
+            </p>
+         </div>
 
-        <div className="dex-panel space-y-4 p-4 md:p-6">
-          <p className="dex-kicker">02 / Element previews</p>
-          <SyncCardPreview />
-          <div className="grid gap-4 md:grid-cols-2">
-            <CountdownPreview />
-            <LocationPreview />
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="dex-panel group border-white/5 p-8 transition-all hover:border-primary/20 hover:bg-white/[0.04]">
+            <p className="mb-6 dex-kicker text-primary/60">03 / Bond Flow</p>
+            <p className="font-serif text-2xl text-white/90">Invite, accept, and <span className="italic">bond</span> instantly with a shared identity.</p>
+          </div>
+          <div className="dex-panel group border-white/5 p-8 transition-all hover:border-primary/20 hover:bg-white/[0.04]">
+            <p className="mb-6 dex-kicker text-primary/60">04 / AI Muses</p>
+            <p className="font-serif text-2xl text-white/90">Gemini-powered date suggestions tuned to your <span className="italic">mutual rhythm</span>.</p>
+          </div>
+          <div className="dex-panel group border-white/5 p-8 transition-all hover:border-primary/20 hover:bg-white/[0.04]">
+            <p className="mb-6 dex-kicker text-primary/60">05 / Sacred Space</p>
+            <p className="font-serif text-2xl text-white/90">Your data is yours. <span className="italic">Private</span> sessions and storage by design.</p>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid w-full max-w-6xl gap-5 border-y border-white/10 px-6 py-12 md:grid-cols-3 md:px-8">
-        <div className="dex-panel p-5">
-          <p className="mb-2 dex-kicker">03 / Connection Flow</p>
-          <p className="text-white/75">Invite, accept, and bond instantly with a dedicated couple identity.</p>
-        </div>
-        <div className="dex-panel p-5">
-          <p className="mb-2 dex-kicker">04 / AI Date Ideas</p>
-          <p className="text-white/75">Gemini-powered suggestions tuned to both locations and interests.</p>
-        </div>
-        <div className="dex-panel p-5">
-          <p className="mb-2 dex-kicker">05 / Private by Design</p>
-          <p className="flex items-center gap-2 text-white/75">
-            <LockKeyhole className="h-4 w-4 text-primary" />
-            Session and storage controls built around pair-only access.
-          </p>
-        </div>
-      </section>
-
-      <footer className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 text-sm text-white/50 md:flex-row md:items-end md:justify-between md:px-8">
-        <div>
-          <p className="font-heading text-lg text-white">Couplesna</p>
-          <p>Shared identity for two, across every timezone.</p>
-        </div>
-        <div className="text-right text-xs uppercase tracking-[0.16em] text-white/40">
-          <p>Version {version}</p>
-          <p>&copy; 2026 Couplesna</p>
+      <footer className="relative z-10 border-t border-white/5 bg-black/20 py-20 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl flex-col gap-12 px-6 md:flex-row md:items-start md:justify-between md:px-12">
+          <div className="space-y-6">
+            <div>
+              <p className="font-heading text-3xl tracking-tight text-white">Couplesna</p>
+              <p className="text-xs font-medium uppercase tracking-[0.4em] text-white/30">The Shared Identity</p>
+            </div>
+            <p className="max-w-xs font-serif text-lg text-white/40">
+              Crafting closeness across timezones and digital barriers.
+            </p>
+          </div>
+          
+          <div className="flex flex-col items-start gap-10 md:flex-row md:gap-20">
+             <div className="space-y-4">
+                <p className="dex-kicker">Navigation</p>
+                <ul className="space-y-2 text-sm font-medium text-white/30">
+                   <li className="transition-colors hover:text-white cursor-pointer">Sanctuary</li>
+                   <li className="transition-colors hover:text-white cursor-pointer">Manifesto</li>
+                   <li className="transition-colors hover:text-white cursor-pointer">Access</li>
+                </ul>
+             </div>
+             <div className="text-right">
+                <p className="dex-kicker mb-4">Integrity</p>
+                <div className="space-y-1 font-serif text-sm italic text-white/20">
+                  <p>Build {version}</p>
+                  <p>&copy; 2026 Couplesna Laboratory</p>
+                </div>
+             </div>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
+

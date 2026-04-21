@@ -35,6 +35,7 @@ export type DashboardPerson = {
   location: Location;
   details: UserDetails;
   media?: UserMedia | null;
+  role?: string | null;
 };
 
 export type User = DashboardPerson;

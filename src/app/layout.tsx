@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${cormorantGaramond.variable} ${syne.variable} dark`} suppressHydrationWarning>
-      <body className="font-serif antialiased selection:bg-primary/30">
+      <body className="font-serif antialiased selection:bg-primary/30" suppressHydrationWarning>
         <AppProvider>
           {children}
           <Toaster />

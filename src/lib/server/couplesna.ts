@@ -139,6 +139,7 @@ function profileToPerson(profile: ProfileRow): DashboardPerson {
     location: normalizeLocation(profile.location),
     details: normalizeDetails(profile.details),
     media: normalizeMedia(profile.media),
+    role: profile.role,
   };
 }
 

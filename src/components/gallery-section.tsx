@@ -61,18 +61,14 @@ export default function GallerySection() {
     [activeCategoryId, gallery]
   );
 
-  const isLocked = true; // Feature locked as requested
+  const isLocked = false; // Unlocked as requested
 
   const currentImage = activeCategory?.images[currentImageIndex];
 
-  const openModal = () => {
-    if (isLocked) {
-      toast({
-        title: 'Feature Locked',
-        description: 'Shared Gallery is coming soon to Couplesna.',
-      });
-      return;
-    }
+  const openModal = (categoryId: string) => {
+    setActiveCategoryId(categoryId);
+    setIsModalOpen(true);
+    setCurrentImageIndex(0);
   };
 
   const closeModal = () => {
@@ -163,10 +159,10 @@ export default function GallerySection() {
   };
 
   React.useEffect(() => {
-    if (activeCategory && activeCategory.images.length === 0) {
+    if (activeCategory && activeCategory.images.length === 0 && isModalOpen) {
       closeModal();
     }
-  }, [activeCategory]);
+  }, [activeCategory, isModalOpen]);
 
   return (
     <>
@@ -178,7 +174,7 @@ export default function GallerySection() {
       <div className="relative">
         <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-4 overflow-hidden rounded-xl">
           {gallery.map((category) => (
-            <AlbumTile key={category.id} category={category} onClick={() => openModal()} />
+            <AlbumTile key={category.id} category={category} onClick={() => openModal(category.id)} />
           ))}
         </div>
 
@@ -194,6 +190,7 @@ export default function GallerySection() {
           </div>
         )}
       </div>
+
 
       {isModalOpen && activeCategory && (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

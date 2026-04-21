@@ -612,6 +612,18 @@ export default function ProfileMenu({
                   <p className="text-center text-sm text-muted-foreground">
                     Signed in as <span className="font-medium text-foreground">{user.email}</span>
                   </p>
+                  
+                  {currentUser.role === 'admin' && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-primary/20 bg-primary/5 hover:bg-primary/10"
+                      onClick={() => window.open('/admin', '_blank')}
+                    >
+                      <Star className="mr-2 h-4 w-4 text-primary" />
+                      Admin Dashboard
+                    </Button>
+                  )}
+
                   <Button variant="destructive" className="w-full" onClick={handleLogout} disabled={isSubmitting}>
                     {isSubmitting ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
