@@ -617,7 +617,7 @@ export default function ProfileMenu({
                     <Button 
                       variant="outline" 
                       className="w-full border-primary/20 bg-primary/5 hover:bg-primary/10"
-                      onClick={() => window.open('/admin', '_blank')}
+                      onClick={() => window.open('https://coupleadmin.iamdex.codes', '_blank')}
                     >
                       <Star className="mr-2 h-4 w-4 text-primary" />
                       Admin Dashboard
