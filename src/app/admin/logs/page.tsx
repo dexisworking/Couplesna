@@ -14,6 +14,12 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { exportAdminLogsCsv, getAdminLogs } from '@/actions/admin';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 export default function AdminLogsPage() {
   const [logs, setLogs] = useState<{
@@ -34,6 +40,7 @@ export default function AdminLogsPage() {
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedMetadata, setSelectedMetadata] = useState<Record<string, unknown> | null>(null);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   useEffect(() => {
@@ -216,12 +223,12 @@ export default function AdminLogsPage() {
 
                   {log.metadata && Object.keys(log.metadata).length > 0 && (
                     <div className="w-32 shrink-0 flex items-center justify-end">
-                       <button 
-                          className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
-                          onClick={() => console.log(log.metadata)}
-                       >
-                          Meta
-                       </button>
+                      <button 
+                         className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-[10px] uppercase tracking-widest text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                         onClick={() => setSelectedMetadata(log.metadata)}
+                      >
+                         View Meta
+                      </button>
                     </div>
                   )}
                </div>
@@ -257,6 +264,19 @@ export default function AdminLogsPage() {
            </button>
         </div>
       </div>
+
+      <Dialog open={!!selectedMetadata} onOpenChange={(open) => !open && setSelectedMetadata(null)}>
+        <DialogContent className="max-w-2xl bg-[#0c0c11] border-white/10 text-white font-serif">
+          <DialogHeader>
+            <DialogTitle className="font-heading uppercase tracking-widest text-sm text-primary">Event Metadata</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 p-6 rounded-2xl bg-black/40 border border-white/5 overflow-auto max-h-[60vh]">
+            <pre className="text-xs text-white/60 leading-relaxed font-mono">
+               {JSON.stringify(selectedMetadata, null, 2)}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

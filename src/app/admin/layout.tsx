@@ -9,7 +9,8 @@ import {
   ScrollText, 
   LogOut, 
   ShieldCheck,
-  Activity
+  Activity,
+  Heart
 } from 'lucide-react';
 import { getClientProjectVersion } from '@/actions/version';
 
@@ -35,6 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { label: 'Dashboard', icon: BarChart3, href: '/admin' },
     { label: 'User Directory', icon: Users, href: '/admin/users' },
+    { label: 'Sacred Bonds', icon: Heart, href: '/admin/couples' },
     { label: 'System Logs', icon: ScrollText, href: '/admin/logs' },
     { label: 'Operational Health', icon: Activity, href: '/admin/health' },
   ];

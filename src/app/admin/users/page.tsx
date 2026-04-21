@@ -27,7 +27,7 @@ interface User {
   full_name: string | null;
   username: string | null;
   avatar_url: string | null;
-  role: string | null;
+  role: 'user' | 'admin' | null;
   created_at: string;
   location: UserLocation | null;
   couple_members: { couple_id: string }[];
@@ -193,7 +193,32 @@ export default function AdminUsersPage() {
                 <td className="px-8 py-6 text-sm tabular-nums text-white/40">
                   {format(new Date(user.created_at), 'MMM d, yyyy')}
                 </td>
-                <td className="px-8 py-6 text-right text-xs text-white/30">{user.id.slice(0, 8)}</td>
+                <td className="px-8 py-6 text-right">
+                   <div className="flex items-center justify-end gap-2">
+                      <button 
+                        className={`px-3 py-1.5 rounded-lg text-[9px] uppercase tracking-widest font-heading transition-all border ${
+                          user.role === 'admin' 
+                          ? 'border-red-500/20 text-red-500 hover:bg-red-500/10' 
+                          : 'border-green-500/20 text-green-500 hover:bg-green-500/10'
+                        }`}
+                        onClick={async () => {
+                          const newRole = user.role === 'admin' ? null : 'admin';
+                          if (confirm(`Are you sure you want to ${newRole ? 'promote' : 'demote'} this user?`)) {
+                            try {
+                              const { updateAdminUserRole } = await import('@/actions/admin');
+                              await updateAdminUserRole(user.id, newRole);
+                              setUsers(prev => prev.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+                            } catch (e) {
+                              alert(e instanceof Error ? e.message : 'Action failed');
+                            }
+                          }
+                        }}
+                      >
+                        {user.role === 'admin' ? 'Demote' : 'Promote'}
+                      </button>
+                      <span className="text-[10px] text-white/10 font-mono">{user.id.slice(0, 8)}</span>
+                   </div>
+                </td>
               </tr>
             ))}
           </tbody>

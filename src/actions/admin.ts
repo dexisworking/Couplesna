@@ -219,6 +219,62 @@ export async function getAdminLogs(params: {
   };
 }
 
+export async function updateAdminUserRole(userId: string, role: 'user' | 'admin' | null) {
+  await assertAdmin();
+  const admin = createAdminSupabaseClient();
+
+  const { error } = await admin
+    .from('profiles')
+    .update({ role })
+    .eq('id', userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true };
+}
+
+export async function getAdminCouples(params?: {
+  page?: number;
+  pageSize?: number;
+}) {
+  await assertAdmin();
+  const admin = createAdminSupabaseClient();
+  const page = Math.max(1, params?.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params?.pageSize ?? 20));
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize - 1;
+
+  const { data, error, count } = await admin
+    .from('couples')
+    .select(`
+      *,
+      couple_members (
+        profile_id,
+        profiles (
+          email,
+          full_name,
+          username,
+          avatar_url
+        )
+      )
+    `, { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(start, end);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return {
+    records: data || [],
+    total: count || 0,
+    page,
+    pageSize,
+  };
+}
+
 export async function exportAdminUsersCsv(search?: string) {
   await assertAdmin();
   const admin = createAdminSupabaseClient();
