@@ -76,32 +76,44 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   const adminSession = await verifyEdgeAdminSession(token);
 
-  // After auth/role checks, route admin subdomain traffic into /admin namespace.
-  if (isAdminSubdomain && !isAdminPath) {
-    url.pathname = `/admin${url.pathname}`;
-    if (!adminSession && url.pathname !== '/admin/login') {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = '/admin/login';
+  // 1. Handle Admin Subdomain Routing
+  if (isAdminSubdomain) {
+    // Force rewrite to /admin if not already there (and not an API call)
+    if (!isAdminPath && !isAdminAuthApi) {
+      url.pathname = `/admin${url.pathname === '/' ? '' : url.pathname}`;
+      const rewriteResponse = NextResponse.rewrite(url);
+      // Preserve cookies for Supabase
+      refreshedResponse.cookies.getAll().forEach((cookie) => {
+        rewriteResponse.cookies.set(cookie.name, cookie.value, cookie);
+      });
+      return rewriteResponse;
+    }
+
+    // Auth check for admin routes on admin domain
+    if (!adminSession && !isAdminLoginPath && !isAdminAuthApi) {
+      const loginUrl = new URL('/admin/login', request.url);
       return NextResponse.redirect(loginUrl);
     }
-    if (adminSession && url.pathname === '/admin/login') {
-      const dashboardUrl = request.nextUrl.clone();
-      dashboardUrl.pathname = '/admin';
+
+    if (adminSession && isAdminLoginPath) {
+      const dashboardUrl = new URL('/admin', request.url);
       return NextResponse.redirect(dashboardUrl);
     }
-    const rewriteResponse = NextResponse.rewrite(url);
-    refreshedResponse.cookies.getAll().forEach((cookie) => {
-      rewriteResponse.cookies.set(cookie.name, cookie.value, cookie);
-    });
-    return rewriteResponse;
+
+    return refreshedResponse;
   }
 
-  if (!adminSession && !isAdminLoginPath) {
-    return NextResponse.redirect(new URL('/admin/login', request.url));
-  }
-
-  if (adminSession && isAdminLoginPath) {
-    return NextResponse.redirect(new URL('/admin', request.url));
+  // 2. Handle Main Domain Protection
+  // If we're on the main domain but trying to access /admin paths,
+  // redirect to the dedicated admin subdomain.
+  if (isAdminPath && !isAdminAuthApi) {
+    const adminUrl = new URL(request.url);
+    adminUrl.hostname = 'coupleadmin.iamdex.codes';
+    // If we're in local dev, this hostname might not resolve, 
+    // so we only do this redirect if it's not localhost.
+    if (!host.includes('localhost') && !host.includes('127.0.0.1')) {
+      return NextResponse.redirect(adminUrl);
+    }
   }
 
   return refreshedResponse;
