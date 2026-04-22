@@ -118,7 +118,7 @@ export default function AdminLoginForm() {
       }
 
       setStatus('Authenticated. Redirecting...');
-      window.location.href = 'https://coupleadmin.iamdex.codes';
+      window.location.assign(window.location.origin);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Authentication failed.');
     } finally {

@@ -1,4 +1,4 @@
-import type {Metadata} from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AppProvider } from '@/context/app-context';
@@ -22,8 +22,6 @@ export const metadata: Metadata = {
   title: 'couplesna',
   description: 'The Boutique Sanctuary for Connected Hearts.',
   manifest: '/manifest.json',
-  themeColor: '#070708',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -34,6 +32,14 @@ export const metadata: Metadata = {
     shortcut: '/couplesna_favicon.png',
     apple: '/couplesna_favicon.png',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#070708',
 };
 
 export default function RootLayout({

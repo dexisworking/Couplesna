@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [version, setVersion] = React.useState('...');
   const handleLogout = async () => {
     await fetch('/api/admin-auth/logout', { method: 'POST' });
-    router.push('/admin/login');
+    router.push('/login');
     router.refresh();
   };
 
@@ -29,16 +29,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     getClientProjectVersion().then(setVersion);
   }, []);
 
-  if (pathname === '/admin/login') {
+  if (pathname === '/login') {
     return <>{children}</>;
   }
 
   const navItems = [
-    { label: 'Dashboard', icon: BarChart3, href: '/admin' },
-    { label: 'User Directory', icon: Users, href: '/admin/users' },
-    { label: 'Sacred Bonds', icon: Heart, href: '/admin/couples' },
-    { label: 'System Logs', icon: ScrollText, href: '/admin/logs' },
-    { label: 'Operational Health', icon: Activity, href: '/admin/health' },
+    { label: 'Dashboard', icon: BarChart3, href: '/' },
+    { label: 'User Directory', icon: Users, href: '/users' },
+    { label: 'Sacred Bonds', icon: Heart, href: '/couples' },
+    { label: 'System Logs', icon: ScrollText, href: '/logs' },
+    { label: 'Operational Health', icon: Activity, href: '/health' },
   ];
 
   return (
