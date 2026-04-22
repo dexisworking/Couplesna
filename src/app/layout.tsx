@@ -16,9 +16,19 @@ const syne = Syne({
   variable: '--font-heading',
 });
 
+import { PWARegister } from '@/components/pwa-register';
+
 export const metadata: Metadata = {
   title: 'couplesna',
-  description: 'Connecting long distance couples and making them feel closer.',
+  description: 'The Boutique Sanctuary for Connected Hearts.',
+  manifest: '/manifest.json',
+  themeColor: '#070708',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Couplesna',
+  },
   icons: {
     icon: '/couplesna_favicon.png',
     shortcut: '/couplesna_favicon.png',
@@ -35,6 +45,7 @@ export default function RootLayout({
     <html lang="en" className={`${cormorantGaramond.variable} ${syne.variable} dark`} suppressHydrationWarning>
       <body className="font-serif antialiased selection:bg-primary/30" suppressHydrationWarning>
         <AppProvider>
+          <PWARegister />
           {children}
           <Toaster />
         </AppProvider>

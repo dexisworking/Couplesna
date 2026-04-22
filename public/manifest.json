@@ -1,0 +1,21 @@
+{
+  "name": "Couplesna",
+  "short_name": "Couplesna",
+  "description": "The Boutique Sanctuary for Connected Hearts.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070708",
+  "theme_color": "#070708",
+  "icons": [
+    {
+      "src": "/couplesna_favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/couplesna_favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
