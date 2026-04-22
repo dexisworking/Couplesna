@@ -48,16 +48,23 @@ async function verifyEdgeAdminSession(token: string | undefined) {
   }
 }
 
+function normalizeHost(value: string | null | undefined) {
+  return value?.split(',')[0]?.trim().toLowerCase().split(':')[0] || '';
+}
+
 export async function middleware(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.next({ request });
   }
 
   const refreshedResponse = await updateSession(request);
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const hostHeader = forwardedHost?.split(',')[0]?.trim() || request.headers.get('host') || '';
-  const host = hostHeader.toLowerCase().split(':')[0];
   const url = request.nextUrl.clone();
+  const hostCandidates = [
+    normalizeHost(request.nextUrl.hostname),
+    normalizeHost(request.headers.get('x-forwarded-host')),
+    normalizeHost(request.headers.get('host')),
+  ].filter(Boolean);
+  const host = hostCandidates[0] || '';
   const isAdminSubdomain = host.startsWith(ADMIN_SUBDOMAIN_PREFIX);
   const isAdminPath = url.pathname === INTERNAL_ADMIN_PREFIX || url.pathname.startsWith(`${INTERNAL_ADMIN_PREFIX}/`);
   const isAdminAuthApi = url.pathname.startsWith('/api/admin-auth');
@@ -104,7 +111,8 @@ export async function middleware(request: NextRequest) {
     }
   } else if (isAdminPath && !isAdminAuthApi) {
     const adminUrl = new URL(request.url);
-    adminUrl.hostname = `${ADMIN_SUBDOMAIN_PREFIX}${host.replace(/^www\./, '')}`;
+    const baseHost = host.replace(/^www\./, '');
+    adminUrl.hostname = `${ADMIN_SUBDOMAIN_PREFIX}${baseHost}`;
     adminUrl.pathname = url.pathname.replace(INTERNAL_ADMIN_PREFIX, '') || '/';
     return NextResponse.redirect(adminUrl);
   }
