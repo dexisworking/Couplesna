@@ -15,41 +15,41 @@ body {
 
 @layer base {
   :root {
-    --background: 280 20% 4%;
-    --foreground: 280 20% 98%;
-    --card: 280 20% 7%;
-    --card-foreground: 280 20% 98%;
-    --popover: 280 20% 7%;
-    --popover-foreground: 280 20% 98%;
-    --primary: 282 100% 41%;
+    --background: 336 22% 6%;
+    --foreground: 0 0% 98%;
+    --card: 336 18% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 336 18% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 339 43% 46%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 280 15% 15%;
-    --secondary-foreground: 280 20% 98%;
-    --muted: 280 15% 12%;
-    --muted-foreground: 280 10% 65%;
-    --accent: 282 50% 30%;
+    --secondary: 336 16% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 336 15% 12%;
+    --muted-foreground: 0 0% 69%;
+    --accent: 339 31% 24%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
-    --border: 280 15% 20%;
-    --input: 280 15% 20%;
-    --ring: 282 100% 41%;
+    --border: 336 15% 20%;
+    --input: 336 15% 20%;
+    --ring: 339 43% 46%;
     --radius: 2rem;
 
-    /* Wisteria Bloom Custom Palette */
-    --w-lavender: 240 100% 91%;
-    --w-deep-purple: 282 100% 41%;
-    --w-thistle: 300 24% 80%;
-    --w-orchid: 302 78% 71%;
+    /* Rouge palette */
+    --w-lavender: 14 60% 92%;
+    --w-deep-purple: 339 43% 46%;
+    --w-thistle: 348 31% 77%;
+    --w-orchid: 352 44% 62%;
   }
   .dark {
-    --background: 280 20% 4%;
-    --foreground: 280 20% 98%;
-    --card: 280 20% 7%;
-    --card-foreground: 280 20% 98%;
-    --primary: 282 100% 41%;
-    --ring: 282 100% 41%;
-    --border: 280 15% 20%;
+    --background: 336 22% 6%;
+    --foreground: 0 0% 98%;
+    --card: 336 18% 10%;
+    --card-foreground: 0 0% 98%;
+    --primary: 339 43% 46%;
+    --ring: 339 43% 46%;
+    --border: 336 15% 20%;
   }
 }
 
@@ -72,7 +72,7 @@ body {
 }
 
 .text-gradient-purple {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#D3D3FF] via-[#ED80E9] to-[#9400D3];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#FFE1E8] via-[#D06C89] to-[#A94064];
 }
 
 .dex-panel {
