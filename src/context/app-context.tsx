@@ -34,6 +34,16 @@ interface AppContextType {
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
 
+function getAuthRedirectUrl() {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const baseUrl =
+    configuredSiteUrl && configuredSiteUrl.length > 0
+      ? configuredSiteUrl
+      : window.location.origin;
+
+  return new URL('/auth/callback', baseUrl).toString();
+}
+
 function buildAuthFallbackProfile(user: SupabaseUser | null): Partial<DashboardPerson> | undefined {
   if (!user) {
     return undefined;
@@ -206,7 +216,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getAuthRedirectUrl(),
       },
     });
 
@@ -229,7 +239,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getAuthRedirectUrl(),
       },
     });
 
