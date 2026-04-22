@@ -58,7 +58,6 @@ export async function middleware(request: NextRequest) {
   const isAdminSubdomain = host.startsWith('coupleadmin.');
   const isAdminPath = url.pathname.startsWith('/admin');
   const isAdminAuthApi = url.pathname.startsWith('/api/admin-auth');
-  const isAdminLoginPath = url.pathname === '/admin/login';
 
   if (url.pathname.startsWith('/_next') || url.pathname === '/favicon.ico') {
     return refreshedResponse;
@@ -76,36 +75,41 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   const adminSession = await verifyEdgeAdminSession(token);
 
-  // --- DOMAIN PARTITION LOGIC ---
+  // --- CONSOLIDATED ROUTING LOGIC ---
   const isCoupleAdmin = host.includes('coupleadmin.');
 
   if (isCoupleAdmin) {
-    // 1. If we're on the admin subdomain and the path already starts with /admin,
-    // it's redundant. Strip it to keep URLs clean (e.g. coupleadmin.../users instead of /admin/users).
+    // 1. Strict URL Cleaning (Remove /admin prefix if user types it manually on this domain)
     if (url.pathname.startsWith('/admin')) {
       const cleanPath = url.pathname.replace('/admin', '') || '/';
-      const cleanUrl = new URL(cleanPath, request.url);
-      return NextResponse.redirect(cleanUrl);
+      return NextResponse.redirect(new URL(cleanPath, request.url));
     }
 
-    // 2. Rewrite everything on the admin subdomain into the /admin folder
-    if (!url.pathname.startsWith('/api/admin-auth')) {
-      url.pathname = `/admin${url.pathname === '/' ? '' : url.pathname}`;
+    // 2. Auth Check (Protect everything on the admin subdomain)
+    const isLoginPage = url.pathname === '/login'; // How we want it to look in URL
+    
+    // If not logged in and not on login page, show login page at the root URL
+    if (!adminSession && !isLoginPage && !isAdminAuthApi) {
+      url.pathname = '/admin/login';
       const rewriteResponse = NextResponse.rewrite(url);
-      // Preserve cookies for Supabase
-      refreshedResponse.cookies.getAll().forEach((cookie) => {
-        rewriteResponse.cookies.set(cookie.name, cookie.value, cookie);
-      });
+      refreshedResponse.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c.name, c.value, c));
       return rewriteResponse;
     }
 
-    // 3. Auth check for the admin subdomain
-    if (!adminSession && !isAdminLoginPath && !isAdminAuthApi) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+    // If logged in and on login page, go to root
+    if (adminSession && isLoginPage) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    // 3. Internal Application Rewrite (Map subdomain root to /admin folder)
+    if (!isAdminAuthApi) {
+      url.pathname = `/admin${url.pathname === '/' ? '' : url.pathname}`;
+      const rewriteResponse = NextResponse.rewrite(url);
+      refreshedResponse.cookies.getAll().forEach((c) => rewriteResponse.cookies.set(c.name, c.value, c));
+      return rewriteResponse;
     }
   } else {
-    // 4. If we're NOT on the admin subdomain but trying to access /admin, 
-    // strictly forbid it or redirect to the proper home.
+    // 4. Main Domain Protection: Strictly redirect /admin to the dedicated subdomain
     if (isAdminPath && !isAdminAuthApi) {
       const adminUrl = new URL(request.url);
       adminUrl.hostname = 'coupleadmin.iamdex.codes';
